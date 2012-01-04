@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib/graphviz
+includedir=${prefix}/include/graphviz
+
+Name: libcircogen
+Description: Circular layout library
+Version: 2.2
+Libs: -L${libdir} -lcircogen
+Cflags: -I${includedir}

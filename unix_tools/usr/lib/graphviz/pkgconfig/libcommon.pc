@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib/graphviz
+includedir=${prefix}/include/graphviz
+                                                                                       
+Name: libcommon
+Description: Various renderers and other routines common to all layout engines.
+Version: 2.2
+Libs: -L${libdir} -lcommon
+Cflags: -I${includedir}

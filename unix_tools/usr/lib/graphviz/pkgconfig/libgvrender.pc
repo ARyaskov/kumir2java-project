@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib/graphviz
+includedir=${prefix}/include/graphviz
+                                                                                       
+Name: libgvrender
+Description: Graphviz rendering library for plugin renderers
+Version: 2.2
+Libs: -L${libdir} -lgvrender
+Cflags: -I${includedir}

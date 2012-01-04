@@ -1,0 +1,1 @@
+@echo "Unittesting begin..." &@parser.exe unittests\procsAndFuncs.kum unittests\procsAndFuncs.dot &@parser.exe unittests\decls1.kum unittests\decls1.dot & @parser.exe unittests\decls2.kum unittests\decls2.dot &@echo "Unittesting end..."

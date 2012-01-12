@@ -14,14 +14,14 @@
 
 #define OUT2DOT 1
 #define ALLOC_SZ 512
-#define POOL_ARRAY_SZ 1000
-
+#define POOL_ARRAY_SZ 2000
+#define HASH_ARRAY_SZ 1000
 
 char* before_val;
 FILE * dotfile;
 FILE * logfile;
 
-int hashes[POOL_ARRAY_SZ];
+int hashes[HASH_ARRAY_SZ];
 int hash_pointer;
 
 int prevSalt;
@@ -30,7 +30,7 @@ int prevSalt;
 #define MAX_ALLOCS_NUM 65536
 
 
-void * safeAllocArray[MAX_ALLOCS_NUM];
+void * safeAllocArray[POOL_ARRAY_SZ];
 int safeAllocPointer;
 
 
@@ -45,7 +45,7 @@ enum ETypeDecl
 union Const_values
 {
     int    Int;
-    /*BOOL   Bool;*/
+    char*  Bool;
     double Double;
     char   Char;
     char*  String;
@@ -59,7 +59,8 @@ enum Const_type
     Double,
     Char,
     String,
-    Id
+    Id,
+    Bool
 };
 
 enum Stmt_type
@@ -75,33 +76,6 @@ enum Stmt_type
     DECL
 };
 
-/*
-enum Expr_type{
-ID,
-FUNCTION_CALL,
-INT_CONST,
-CHAR_CONST,
-STRING_CONST,
-DOUBLE_CONST,
-BOOL_CONST,
-ASSMNT,
-PLUS,
-MINUS,
-MUL,
-DIV,
-POW,
-GT,
-LT,
-GTEQ,
-LTEQ,
-NEQ,
-EQ,
-UMINUS,
-UPLUS,
-ID_WITH_INDEXES,
-COMMA,
-EXPRLIST
-};*/
 
 enum Additional_Expr_types
 {
@@ -298,9 +272,12 @@ struct NZnach_value
 
 struct NArg_value
 {
-    struct NAtomic_type* type;
-    struct NIdentifier* id;
-    struct NDimensions* dimensions;
+    enum ETypeDecl type_of_value;
+    struct NAtomic_type* atomic_type;
+    struct NArray_type* array_type;
+
+    struct NEnum_atomic_identifier_list* atomic_list;
+    struct NEnum_array_identifier_list* array_list;
 
 #ifdef OUT2DOT
     char* print_val;
@@ -309,9 +286,12 @@ struct NArg_value
 
 struct NRez_value
 {
-    struct NAtomic_type* type;
-    struct NIdentifier* id;
-    struct NDimensions* dimensions;
+    enum ETypeDecl type_of_value;
+    struct NAtomic_type* atomic_type;
+    struct NArray_type* array_type;
+
+    struct NEnum_atomic_identifier_list* atomic_list;
+    struct NEnum_array_identifier_list* array_list;
 
 #ifdef OUT2DOT
     char* print_val;
@@ -333,8 +313,8 @@ struct NDim
     struct NIdentifier* firstID;
     struct NIdentifier* secondID;
 
-    int* firstINT;
-    int* secondINT;
+    int firstINT;
+    int secondINT;
 
     struct NDim* next;
 
@@ -360,7 +340,7 @@ struct NRead_stmt
 {
     char* var;
     struct NRead_stmt* next;
-
+struct NExpr_list* list;
 #ifdef OUT2DOT
     char* print_val;
 #endif
@@ -389,6 +369,8 @@ struct NPrint_stmt_list
 struct NPrint_stmt
 {
     char* var;
+    struct NExpr_list* list;
+
     struct NPrint_stmt* next;
 
 #ifdef OUT2DOT
@@ -534,13 +516,13 @@ struct NParam_list*                  append_param_to_list (struct NParam_list* p
 struct NZnach_value*                 create_znachvalue(struct NExpr* expr);
 struct NArg_value*                   create_arg(struct NAtomic_type* type, struct NIdentifier* id, struct NDimensions* dims);
 struct NRez_value*                   create_rez(struct NAtomic_type* type, struct NIdentifier* id, struct NDimensions* dims);
-struct NDim*                         create_int_int_dim(int* first,int* second);
-struct NDim*                         create_int_id_dim(int* first,struct NIdentifier* second);
-struct NDim*                         create_id_int_dim(struct NIdentifier* first,int* second);
+struct NDimensions*                         create_int_int_dim(int first,int second);
+struct NDimensions*                         create_int_id_dim(int first,struct NIdentifier* second);
+struct NDim*                         create_id_int_dim(struct NIdentifier* first,int second);
 struct NDim*                         create_id_id_dim(struct NIdentifier* first,struct NIdentifier* second);
-struct NDimensions*                  append_int_int_dim(struct NDimensions* list, int* first, int* second);
-struct NDimensions*                  append_int_id_dim(struct NDimensions* list,int* first,struct NIdentifier* second);
-struct NDimensions*                  append_id_int_dim(struct NDimensions* list, struct NIdentifier* first,int* second);
+struct NDimensions*                  append_int_int_dim(struct NDimensions* list, int first, int second);
+struct NDimensions*                  append_int_id_dim(struct NDimensions* list,int first,struct NIdentifier* second);
+struct NDimensions*                  append_id_int_dim(struct NDimensions* list, struct NIdentifier* first,int second);
 struct NDimensions*                  append_id_id_dim(struct NDimensions* list,struct NIdentifier* first,struct NIdentifier* second);
 struct NPrint_stmt*                  create_str_print(char* str);
 struct NPrint_stmt*                  create_int_print(int value);

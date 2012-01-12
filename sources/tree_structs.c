@@ -4,6 +4,8 @@
 mallocPointer = 0;
 prevSalt = 0;
 
+
+
 /*
 Инициализация пула памяти
 (временное решение)
@@ -14,6 +16,7 @@ void init_safeAlloc()
     {
         safeAllocArray[i] = malloc(ALLOC_SZ);
     }
+
 }
 
 /*
@@ -451,7 +454,6 @@ struct NStmt* create_stmt_proc (struct NProc_stmt* proc_stmt)
         makeNode(uniqID, proc_stmt->print_val);
 #endif
     }
-
     return stmt;
 }
 
@@ -677,12 +679,20 @@ struct NExpr* create_const_expr (enum Const_type type, union Const_values value)
 
     }
     break;
-    /* case Bool: {
-    expr_type = BOOL_CONST;
-    const_type = Bool;
-    val.Bool = value.Bool;
-    }
-    break;*/
+    case Bool:
+    {
+        expr->expr_type = BOOL_CONST;
+        expr->const_type = Bool;
+        expr->val.Bool = (char*)safeAlloc(4);
+        strcpy(expr->val.Bool, value.Bool);
+
+#ifdef OUT2DOT
+        expr->print_val = (char*)safeAlloc(ALLOC_SZ);
+        strcpy(expr->print_val, strcat_const("Логическая константа: ",expr->val.Bool) );
+
+#endif
+           }
+           break;
     case Double:
     {
         expr->expr_type = DOUBLE_CONST;
@@ -797,7 +807,7 @@ struct NExpr* create_unary(int type, struct NExpr* expr)
     strcpy(result->print_val, "\"");
     strcat(result->print_val, getName(result->expr_type ) );
 
-    strcat(expr->print_val, "__");
+    strcat(expr->print_val, "!");
     strcat(expr->print_val, makeHashString());
     strcpy(before_val, result->print_val+1);
 
@@ -1125,7 +1135,7 @@ struct NParam_list* append_param_to_list (struct NParam_list* param_list, struct
     char* uniqID;
     if (param)
     {
-        if (!param_list)
+        if (param_list)
         {
             //  param_list->last->next = param;
             param_list->last = param;
@@ -1170,52 +1180,107 @@ struct NZnach_value* create_znachvalue(struct NExpr* expr)
 /*
 Арг-значение(параметр-аргумент вида "арг цел bm") <- тип аргумента, идентификатор аргумента[, измерения массива,
 в случае передачи табличного типа как параметра (вида [1:10,1:20])]
+Создаётся из значения атомарного типа
 */
-struct NArg_value* create_arg(struct NAtomic_type* type, struct NIdentifier* id, struct NDimensions* dims)
+struct NArg_value* create_arg_from_atomic(struct NAtomic_type* type, struct NEnum_atomic_identifier_list* list)
 {
     struct NArg_value* result = NULL;
     char * uniqID;
 
     result = (struct NArg_value*)safeAlloc(sizeof(struct NArg_value));
-    result->type = type;
-    result->id = id;
-    result->dimensions = dims ? dims : NULL;
+    result->type_of_value = FROM_ATOMIC_TYPE;
+    result->atomic_type = type;
+    result->atomic_list = list;
+
 
 #ifdef OUT2DOT
-
     uniqID = makeUniqueID("create_arg");
     result->print_val = uniqID;
-    makeNode(uniqID, id->print_val);
     makeNode(uniqID, type->print_val);
-    if (dims)
-        makeNode(uniqID, dims->print_val);
+    makeNode(uniqID, list->print_val);
 #endif
 
     return result;
 }
 
 /*
-Рез-значение <- тип параметра,
+Арг-значение(параметр-аргумент вида "арг цел bm") <- тип аргумента, идентификатор аргумента[, измерения массива,
+в случае передачи табличного типа как параметра (вида [1:10,1:20])]
+Создаётся из значения табличного типа
 */
-struct NRez_value* create_rez(struct NAtomic_type* type, struct NIdentifier* id, struct NDimensions* dims)
+struct NArg_value* create_arg_from_array(struct NAtomic_type* type, struct NEnum_array_identifier_list* list)
 {
-    struct NRez_value* result = NULL;
+    struct NArg_value* result = NULL;
     char * uniqID;
-    result = (struct NRez_value*)safeAlloc(sizeof(struct NRez_value));
-    result->type = type;
-    result->id = id;
-    result->dimensions = dims ? dims : NULL;
 
+    result = (struct NArg_value*)safeAlloc(sizeof(struct NArg_value));
+    result->type_of_value = FROM_ARRAY_TYPE;
+    result->array_type = type;
+    result->array_list = list;
+
+
+#ifdef OUT2DOT
+    uniqID = makeUniqueID("create_arg");
+    result->print_val = uniqID;
+    makeNode(uniqID, type->print_val);
+    makeNode(uniqID, list->print_val);
+#endif
+
+    return result;
+}
+
+
+/*
+Рез-значение <- тип параметра,
+Рез-значение - параметр, переданный по ссылке
+Создаём из атомарного типа
+*/
+struct NRez_value* create_rez_from_atomic(struct NAtomic_type* type, struct NEnum_array_identifier_list* list)
+{
+    struct NArg_value* result = NULL;
+    char * uniqID;
+
+    result = (struct NArg_value*)safeAlloc(sizeof(struct NArg_value));
+    result->type_of_value = FROM_ATOMIC_TYPE;
+    result->atomic_type = type;
+    result->atomic_list = list;
 
 
 #ifdef OUT2DOT
     uniqID = makeUniqueID("create_rez");
     result->print_val = uniqID;
-    makeNode(uniqID, id->print_val);
-    makeNode(uniqID, dims->print_val);
+    makeNode(uniqID, type->print_val);
+    makeNode(uniqID, list->print_val);
 #endif
-
     return result;
+}
+
+
+/*
+Рез-значение <- тип параметра,
+Рез-значение - параметр, переданный по ссылке
+Создаём из табличного типа
+*/
+struct NRez_value* create_rez_from_array(struct NAtomic_type* type, struct NEnum_array_identifier_list* list)
+{
+
+    struct NArg_value* result = NULL;
+    char * uniqID;
+
+    result = (struct NArg_value*)safeAlloc(sizeof(struct NArg_value));
+    result->type_of_value = FROM_ARRAY_TYPE;
+    result->array_type = type;
+    result->array_list = list;
+
+
+#ifdef OUT2DOT
+    uniqID = makeUniqueID("create_rez");
+    result->print_val = uniqID;
+    makeNode(uniqID, type->print_val);
+    makeNode(uniqID, list->print_val);
+#endif
+    return result;
+
 }
 
 /*
@@ -1223,25 +1288,36 @@ struct NRez_value* create_rez(struct NAtomic_type* type, struct NIdentifier* id,
 Создаёт измерение массива из целых чисел, то есть [1:13].
 Это для объявления массива.
 */
-struct NDim* create_int_int_dim(int* first,int* second)
+struct NDimensions* create_int_int_dim(int first,int second)
 {
     struct NDim* dim = NULL;
     char * uniqID;
     dim = (struct NDim*)safeAlloc(sizeof(struct NDim));
-
+    dim->print_val = (char*)safeAlloc(32);
     dim->type = INT_INT;
     dim->firstINT = first;
     dim->secondINT = second;
 
 
+    struct NDimensions* result = (struct NDimensions*)safeAlloc(sizeof(struct NDimensions));
+    char temp[16];
+    sprintf(temp, "[%d:%d]",first,second);
+
+    //result->print_val = makeUniqueID(strcat_const("create_int_int_dim",temp));
+    result->print_val = makeUniqueID("create_int_int_dim");
+    result->first = dim;
+    result->last = dim;
+
 #ifdef OUT2DOT
-    uniqID = makeUniqueID("create_int_int_dim");
-    dim->print_val = uniqID;
-    makeNode(uniqID, strcat_const("Целое число: ", first));
-    makeNode(uniqID, strcat_const("Целое число: ", second));
+    char* buf1[10]= {};
+    char* buf2[10]= {};
+    itoa(first, buf1, 10);
+    itoa(second, buf2, 10);
+    makeNode(result->print_val, strcat_const("Целое число: ", buf1));
+    makeNode(result->print_val, strcat_const("Целое число: ", buf2));
 #endif
 
-    return dim;
+    return result;
 }
 
 /*
@@ -1249,23 +1325,35 @@ struct NDim* create_int_int_dim(int* first,int* second)
 Создаёт измерение массива из целого числа и идентификатора переменной, то есть [1:количество].
 Это для объявления массива.
 */
-struct NDim* create_int_id_dim(int* first,struct NIdentifier* second)
+struct NDimensions* create_int_id_dim(int first,struct NIdentifier* second)
 {
-    struct NDim * dim = (struct NDim*)safeAlloc(sizeof(struct NDim));
+
+    struct NDim* dim = NULL;
     char * uniqID;
+    dim = (struct NDim*)safeAlloc(sizeof(struct NDim));
+    dim->print_val = (char*)safeAlloc(32);
     dim->type = INT_ID;
     dim->firstINT = first;
     dim->secondID = second;
 
+
+    struct NDimensions* result = (struct NDimensions*)safeAlloc(sizeof(struct NDimensions));
+    char temp[16];
+    sprintf(temp, "[%d:%s]",first,second->name);
+
+    //result->print_val = makeUniqueID(strcat_const("create_int_int_dim",temp));
+    result->print_val = makeUniqueID("create_int_id_dim");
+    result->first = dim;
+    result->last = dim;
+
 #ifdef OUT2DOT
-    uniqID = makeUniqueID("create_int_id_dim");
-    dim->print_val = uniqID;
-    makeNode(uniqID, strcat_const("Целое число: ", first));
-    makeNode(uniqID, strcat_const("Идентификатор: ", second->print_val));
+    char* buf1[10]= {};
+    itoa(first, buf1, 10);
+    makeNode(result->print_val, strcat_const("Целое число: ", buf1));
+    makeNode(result->print_val, second->print_val);
 #endif
 
-
-    return dim;
+    return result;
 }
 
 /*
@@ -1273,7 +1361,7 @@ struct NDim* create_int_id_dim(int* first,struct NIdentifier* second)
 Создаёт измерение массива из идентификатора переменной и целого числа, то есть [начало:10].
 Это для объявления массива.
 */
-struct NDim* create_id_int_dim(struct NIdentifier* first,int* second)
+struct NDim* create_id_int_dim(struct NIdentifier* first,int second)
 {
     struct NDim* dim = (struct NDim*)safeAlloc(sizeof(struct NDim));
     char * uniqID;
@@ -1318,7 +1406,7 @@ struct NDim* create_id_id_dim(struct NIdentifier* first,struct NIdentifier* seco
 /*
 Добавляет ещё одно измерение к массиву, было [1:10]->стало [1:10, 1:15]
 */
-struct NDimensions* append_int_int_dim(struct NDimensions* list, int* first, int* second)
+struct NDimensions* append_int_int_dim(struct NDimensions* list, int first, int second)
 {
     struct NDim* dim = (struct NDim*)safeAlloc(sizeof(struct NDim));
     char * uniqID;
@@ -1332,11 +1420,15 @@ struct NDimensions* append_int_int_dim(struct NDimensions* list, int* first, int
         list->last = dim;
 
 #ifdef OUT2DOT
+        char buf1[8]= {};
+        char buf2[8]= {};
+        itoa(first, buf1, 10);
+        itoa(second, buf2, 10);
         uniqID = makeUniqueID("append_int_int_dim");
         makeNode(list->print_val, uniqID);
         // dim->print_val = uniqID;
-        makeNode(uniqID, strcat_const("Целое число: ", first));
-        makeNode(uniqID, strcat_const("Целое число: ", second));
+        makeNode(uniqID, strcat_const("Целое число: ", buf1));
+        makeNode(uniqID, strcat_const("Целое число: ", buf2));
 #endif
     }
     else
@@ -1349,8 +1441,9 @@ struct NDimensions* append_int_int_dim(struct NDimensions* list, int* first, int
 /*
 Добавляет ещё одно измерение к массиву, было [1:10]->стало [1:10, 1:n]
 */
-struct NDimensions* append_int_id_dim(struct NDimensions* list,int* first, struct NIdentifier* second)
+struct NDimensions* append_int_id_dim(struct NDimensions* list,int first, struct NIdentifier* second)
 {
+
     char * uniqID;
     struct NDim* dim = (struct NDim*)safeAlloc(sizeof(struct NDim));
     dim->type = INT_ID;
@@ -1362,11 +1455,13 @@ struct NDimensions* append_int_id_dim(struct NDimensions* list,int* first, struc
         list->last->next = dim;
         list->last = dim;
 #ifdef OUT2DOT
+        char buf[10]= {};
+        itoa(first, buf, 10);
         uniqID = makeUniqueID("append_int_id_dim");
         makeNode(list->print_val, uniqID);
         // dim->print_val = uniqID;
-        makeNode(uniqID, strcat_const("Целое число: ", first));
-        makeNode(uniqID, strcat_const("Идентификатор: ", second->print_val));
+        makeNode(uniqID, strcat_const("Целое число: ", buf));
+        makeNode(uniqID, second->print_val);
 
 #endif
     }
@@ -1374,13 +1469,14 @@ struct NDimensions* append_int_id_dim(struct NDimensions* list,int* first, struc
     {
         list = create_int_id_dim(first, second);
     }
+
     return list;
 }
 
 /*
 Добавляет ещё одно измерение к массиву, было [1:10]->стало [1:10, от:10]
 */
-struct NDimensions* append_id_int_dim(struct NDimensions* list, struct NIdentifier* first,int* second)
+struct NDimensions* append_id_int_dim(struct NDimensions* list, struct NIdentifier* first,int second)
 {
     struct NDim* dim = (struct NDim*)safeAlloc(sizeof(struct NDim));
     char * uniqID;
@@ -1444,163 +1540,52 @@ struct NDimensions* append_id_id_dim(struct NDimensions* list,struct NIdentifier
 }
 
 
-/*
-Оператор вывода на экран <- текст для вывода
-*/
-struct NPrint_stmt* create_str_print(char* str)
+
+
+struct NPrint_stmt* create_expr_list_print(struct NExpr_list* list)
 {
-
-    struct NPrint_stmt* print_stmt = (struct NPrint_stmt*)safeAlloc(sizeof(struct NPrint_stmt));
-
-    char * uniqID;
-
-    print_stmt->var = (char*)safeAlloc(strlen(str));
-
-    strcpy(print_stmt->var, str);
-
-#ifdef OUT2DOT
-
-    uniqID = makeUniqueID("create_str_print");
-    print_stmt->print_val = uniqID;
-    makeNode(uniqID, strcat_const("Вывод: ", str));
-
-#endif
-
-    return print_stmt;
-}
-
-/*
-Оператор вывода на экран <- число для вывода
-*/
-struct NPrint_stmt* create_int_print(int value)
-{
-
     struct NPrint_stmt* print_stmt = NULL;
-    char buf[10]= {0};
+
     char* uniqID;
     print_stmt = (struct NPrint_stmt*) safeAlloc( sizeof(struct NPrint_stmt) );
 
-
-    sprintf(buf, "%d", value);
-    print_stmt->var = (char*)safeAlloc(strlen(buf));
-
-    strcpy(print_stmt->var, buf);
+    print_stmt->var = list->print_val;
+    print_stmt->list = list;
 
 #ifdef OUT2DOT
-    uniqID = makeUniqueID("create_int_print");
+    uniqID = makeUniqueID("create_expr_list_print");
     print_stmt->print_val = uniqID;
-    makeNode(uniqID, strcat_const("Вывод: ", buf));
+    makeNode(uniqID, print_stmt->var);
 
 #endif
 
 
     return print_stmt;
 }
-/*
-struct NPrint_stmt_list* create_bool_print(BOOL value) {
-struct NPrint_stmt_list* result = NULL;
-struct NPrint_stmt* print_stmt = NULL;
-result = (struct NPrint_stmt_list*)safeAlloc(sizeof(struct NPrint_stmt_list));
-print_stmt = (struct NPrint_stmt*)safeAlloc(sizeof(struct NPrint_stmt));
-
-char* inStr = (char*)safeAlloc(3*sizeof(char));
-if (value) {
-strcpy(inStr, "Да");
-} else {
-strcpy(inStr, "Нет");
-}
-realloc(print_stmt->var, strlen(inStr));
-strcpy(print_stmt->var, inStr);
-print_stmt = NULL;
-
-result->first = print_stmt;
-result->last = print_stmt;
 
 
-return result;
-}
-*/
-
-/*
-Добавление в список вывода на экран
-*/
-
-struct NPrint_stmt_list* append_str_print(struct NPrint_stmt_list* list, char* str)
+struct NRead_stmt* create_expr_list_read(struct NExpr_list* list)
 {
+    struct NRead_stmt* read_stmt = NULL;
 
-    struct NPrint_stmt* print_stmt = (struct NPrint_stmt*)safeAlloc(sizeof(struct NPrint_stmt));
-
-    strcpy(print_stmt->var, str);
-
-    if (list)
-    {
-        list->last->next = print_stmt;
-        list->last = print_stmt;
-
-#ifdef OUT2DOT
-        char* uniqID = makeUniqueID("append_str_print");
-        makeNode(list, uniqID);
-        //print_stmt->print_val = uniqID;
-        makeNode(uniqID, strcat_const("Вывод: ", str));
-#endif
-    }
-    else
-    {
-        list = create_str_print(print_stmt->var);
-    }
-    return list;
-}
-
-struct NPrint_stmt_list* append_int_print(struct NPrint_stmt_list* list, int value)
-{
-    char buf[10]= {0};
     char* uniqID;
-    struct NPrint_stmt* print_stmt = (struct NPrint_stmt*)safeAlloc(sizeof(struct NPrint_stmt));
-    sprintf(buf, "%d", value);
-    strcpy(print_stmt->var, buf);
-    if (list)
-    {
-        list->last->next = print_stmt;
-        list->last = print_stmt;
+    read_stmt = (struct NRead_stmt*) safeAlloc( sizeof(struct NRead_stmt) );
+
+    read_stmt->var = list->print_val;
+    read_stmt->list = list;
 
 #ifdef OUT2DOT
+    uniqID = makeUniqueID("create_expr_list_read");
+    read_stmt->print_val = uniqID;
+    makeNode(uniqID, read_stmt->var);
 
-        uniqID = makeUniqueID("append_int_print");
-        makeNode(list, uniqID);
-        //print_stmt->print_val = uniqID;
-        makeNode(uniqID, strcat_const("Вывод: ", buf));
 #endif
-    }
-    else
-    {
-        list = create_int_print(print_stmt->var);
-    }
-    return list;
+
+
+    return read_stmt;
 }
 
-/*struct NPrint_stmt_list* append_bool_print(struct NPrint_stmt_list* list, BOOL value) {
 
-struct NPrint_stmt* print_stmt = NULL;
-print_stmt = (struct NPrint_stmt*)safeAlloc(sizeof(struct NPrint_stmt));
-
-char* inStr = (char*)safeAlloc(3*sizeof(char));
-if (value) {
-strcpy(inStr, "Да");
-} else {
-strcpy(inStr, "Нет");
-}
-realloc(print_stmt->var, strlen(inStr));
-strcpy(print_stmt->var, inStr);
-print_stmt = NULL;
-
-if (list) {
-list->last->next = print_stmt;
-list->last = print_stmt;
-} else {
-list = create_bool_print(print_stmt);
-}
-return list;
-}*/
 
 /*
 Атомарный тип <- текстовое представление
@@ -1644,51 +1629,6 @@ struct NArray_type*  create_array_type(char* name)
     result->print_val = uniqID;
     makeNode(uniqID, strcat_const("Тип: ", name));
 #endif
-
-    return result;
-}
-
-/*
-Обобщённый тип <- атомарный тип
-*/
-struct NType*  create_type_from_atomic(struct NAtomic_type* atomic_type)
-{
-
-    struct NType* result = (struct NType*)safeAlloc(sizeof(struct NType));
-    char* uniqID;
-    result->type = FROM_ATOMIC_TYPE;
-
-    result->name = (char*)safeAlloc(ALLOC_SZ);
-
-    strcpy(result->name, atomic_type->name);
-
-#ifdef OUT2DOT
-    uniqID = makeUniqueID("create_type_from_atomic");
-    result->print_val = uniqID;
-    makeNode(uniqID, atomic_type->print_val);
-#endif
-
-    return result;
-}
-
-/*
-Обобщённый тип <- табличный тип
-*/
-struct NType*  create_type_from_array(struct NArray_type* arr_type)
-{
-
-    struct NType* result = (struct NType*)safeAlloc(sizeof(struct NType));
-    char* uniqID;
-    result->type =     FROM_ARRAY_TYPE;
-    result->name = (char*)safeAlloc(ALLOC_SZ);
-    strcpy(result->name, arr_type->name);
-
-#ifdef OUT2DOT
-    uniqID = makeUniqueID("create_type_from_atomic");
-    result->print_val = uniqID;
-    makeNode(uniqID, arr_type->print_val);
-#endif
-
 
     return result;
 }
@@ -1744,17 +1684,24 @@ struct NEnum_array_identifier_list* create_enum_array_identifier_list(struct NId
     firstId->print_val = (char*)safeAlloc(ALLOC_SZ);
     list->print_val = (char*)safeAlloc(ALLOC_SZ);
 
-    strcpy(firstId->print_val, id->print_val);
-    strcpy(list->print_val, firstId->print_val);
-
     list->first = firstId;
     list->last = firstId;
+
 #ifdef OUT2DOT
     uniqID = makeUniqueID("create_enum_array_identifier_list");
-    firstId->print_val = uniqID;
-    makeNode(uniqID, list->print_val);
+    // firstId->print_val = uniqID;
+    makeNode(uniqID, id->print_val);
     makeNode(uniqID, dimensions->print_val);
+
+    strcpy(list->print_val,  uniqID);
+
+    char* temp[32];
+    strcpy(temp,id->print_val);
+    strcat(temp,dimensions->print_val);
+
+    strcpy(firstId->print_val, temp);
 #endif
+
 
 
     return list;

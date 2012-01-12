@@ -35,13 +35,14 @@ int safeAllocPointer;
 
 
 
-
+/* Тип, из которого создаётся объявление */
 enum ETypeDecl
 {
     FROM_ATOMIC_TYPE,
     FROM_ARRAY_TYPE
 };
 
+/* Объединение, хранящее значение выражения */
 union Const_values
 {
     int    Int;
@@ -52,7 +53,7 @@ union Const_values
     char*  Id;
 };
 
-
+/* Тип константного выражения */
 enum Const_type
 {
     Int,
@@ -63,6 +64,7 @@ enum Const_type
     Bool
 };
 
+/* Тип оператора */
 enum Stmt_type
 {
     ENDLINE,
@@ -76,7 +78,7 @@ enum Stmt_type
     DECL
 };
 
-
+/* Дополнительный тип выражения */
 enum Additional_Expr_types
 {
     FUNCTION_CALL,
@@ -84,82 +86,74 @@ enum Additional_Expr_types
     ID_WITH_INDEXES
 };
 
+/* Режим индексов в объявлении массива */
+enum EDimensionType
+{
+    /* Оба индекса - целые числа (массив[1:10]) */
+    INT_INT,
+    /* Второй индекс - переменная (массив[1:N])*/
+    INT_ID
+};
+
+
+/* Символ program - программа (корень) */
 struct NProgram
 {
-    struct Stmt_list* stmt_list;
+    // Список операторов stmt_list
+    struct NStmt_list* stmt_list;
 #ifdef OUT2DOT
+// Здесь и далее - значение для печати в узле дерева
     char* print_val;
 #endif
 };
 
+/* Символ identifier - идентификатор */
 struct NIdentifier
 {
+    // Строка, из которой создаётся идентификатор
     char* name;
 #ifdef OUT2DOT
     char* print_val;
 #endif
 };
 
+/* Символ stmt - оператор*/
 struct NStmt
 {
+    // Тип оператора
     enum Stmt_type  type;
+    // Указатель на выражение
     struct NExpr*   expr;
+    // Указатель на список выражений
     struct NExpr_list* expr_list;
+    // Указатель на функцию
     struct NFunc_stmt* func_stmt;
+    // Указатель на процедуру
     struct NProc_stmt* proc_stmt;
+    // Указатель на оператор печати
     struct NPrint_stmt* print_stmt;
+    // Указатель на оператор ввода
     struct NRead_stmt* read_stmt;
+    // Указатель на возвращаемое значение функции
     struct NZnach_value* znach_value;
+    // Указатель на объявление переменной
     struct NDecl* decl;
+    // Указатель на следующий оператор в списке
     struct NStmt*  next;
 
-
-
-
 #ifdef OUT2DOT
     char* print_val;
 #endif
 };
 
-struct NType
-{
-
-    enum ETypeDecl type;
-
-    char* name;
-
-#ifdef OUT2DOT
-    char* print_val;
-#endif
-
-};
-
-struct NAtomicType
-{
-
-    char* name;
-
-#ifdef OUT2DOT
-    char* print_val;
-#endif
-
-};
-
-struct NArrayType
-{
-
-    char* name;
-
-#ifdef OUT2DOT
-    char* print_val;
-#endif
-
-};
 
 
+/* Символ stmt_list - список операторов*/
 struct NStmt_list
 {
+    /* Первый в списке оператор */
     struct NStmt* first;
+    /* Последний в списке оператор */
     struct NStmt* last;
 
 #ifdef OUT2DOT
@@ -167,9 +161,12 @@ struct NStmt_list
 #endif
 };
 
+/* Символ expr_list - список выражений */
 struct NExpr_list
 {
+    /* Первое выражение в списке*/
     struct NExpr* first;
+    /* Последнее выражение в списке*/
     struct NExpr* last;
 
 #ifdef OUT2DOT
@@ -177,19 +174,27 @@ struct NExpr_list
 #endif
 };
 
-
+/* Символ expr - выражение */
 struct NExpr
 {
+    /* Тип выражения */
     enum yytokentype       expr_type;
+    /* Тип константы (если хранится константа) */
     enum Const_type      const_type;
+    /* Значение константы (если хранится константа) */
     union Const_values         val;
 
+    /* Указатель на левое выражение (если есть)*/
     struct NExpr*        left;
+    /* Указатель на правое выражение (если есть)*/
     struct NExpr*        right;
+    /* Указатель на список выражений (если хранится список)*/
     struct NExpr_list*   list;
+    /* Указатель на следующее выражение*/
     struct NExpr*        next;
-
+    /* Указатель на вызов функции (если хранится вызов функции) */
     struct NFunction_call* func_call;
+    /* Указатель на идентификатор (если хранится идентификатор)*/
     struct NIdentifier*  id;
 #ifdef OUT2DOT
     char* print_val;
@@ -198,12 +203,14 @@ struct NExpr
 };
 
 
-
+/* Символ decl - объявление */
 struct NDecl
 {
+    /* Тип объявления - из атомарного или табличного типа*/
     enum ETypeDecl type_decl;
-    struct NType* type;
+    /* Список атомарных идентификаторов, если атомарный тип*/
     struct NEnum_atomic_identifiers* atomic_ids;
+    /* Список табличных идентификаторов, если табличный тип*/
     struct NEnum_array_identifiers* array_ids;
 
 #ifdef OUT2DOT
@@ -212,12 +219,16 @@ struct NDecl
 
 };
 
-
+/* Символ func_stmt - определение функции как оператор */
 struct NFunc_stmt
 {
-    struct NType* ret_type;
+    /* Возвращаемое значение (atomic_type) */
+    struct NAtomic_type* ret_type;
+    /* Список параметров (param_list) */
     struct NParam_list* param_list;
+    /* Список операторов тела функции (stmt_list) */
     struct NStmt_list* stmt_list;
+    /* Идентификатор функции */
     struct NIdentifier* id;
 
 #ifdef OUT2DOT
@@ -225,10 +236,14 @@ struct NFunc_stmt
 #endif
 };
 
+/* Символ proc_stmt - определение процедуры как оператор */
 struct NProc_stmt
 {
+    /* Список параметров процедуры (param_list)*/
     struct NParam_list* param_list;
+    /* Список операторов тела процедуры (stmt_list)*/
     struct NStmt_list* stmt_list;
+    /* Идентификатор процедуры*/
     struct NIdentifier* id;
 
 #ifdef OUT2DOT
@@ -236,10 +251,12 @@ struct NProc_stmt
 #endif
 };
 
-
+/* Символ param_list - список параметров*/
 struct NParam_list
 {
+    /* Первый параметр в списке */
     struct NParam* first;
+    /* Последний параметр в списке */
     struct NParam* last;
 
 #ifdef OUT2DOT
@@ -248,12 +265,15 @@ struct NParam_list
 };
 
 
-
-
+/* Символ param - параметр */
 struct NParam
 {
+    /*Тип параметра - ARG (обычный аргумент)
+      или REZ (параметр по ссылке)*/
     int type;
+    /* Указатель на арг-параметр в первом случае*/
     struct NArg_value* arg_value;
+    /* Указатель на рез-параметр во втором случае*/
     struct NRez_value* rez_value;
 
 #ifdef OUT2DOT
@@ -261,8 +281,10 @@ struct NParam
 #endif
 };
 
+/* Символ znach_value - присвоение возвращаемого значения функции*/
 struct NZnach_value
 {
+    /* Выражение, присваиваемое "знач" */
     struct NExpr* expr;
 
 #ifdef OUT2DOT
@@ -270,13 +292,19 @@ struct NZnach_value
 #endif
 };
 
+/* Символ arg_value - арг-параметр (обычный аргумент)*/
 struct NArg_value
 {
+    /* Тип арг-параметра - атомарный или табличный*/
     enum ETypeDecl type_of_value;
+    /* Атомарный тип */
     struct NAtomic_type* atomic_type;
+    /* Табличный тип */
     struct NArray_type* array_type;
 
+    /* Список идентификаторов атомарного типа*/
     struct NEnum_atomic_identifier_list* atomic_list;
+    /* Список идентификаторов табличного типа*/
     struct NEnum_array_identifier_list* array_list;
 
 #ifdef OUT2DOT
@@ -284,13 +312,18 @@ struct NArg_value
 #endif
 };
 
+/* Символ rez_value - рез-параметр (выходной параметр, параметр по ссылке)*/
 struct NRez_value
 {
+    /* Тип рез-параметра - атомарный или табличный*/
     enum ETypeDecl type_of_value;
+    /* Атомарный тип */
     struct NAtomic_type* atomic_type;
+    /* Табличный тип */
     struct NArray_type* array_type;
-
+    /* Список идентификаторов атомарного типа*/
     struct NEnum_atomic_identifier_list* atomic_list;
+    /* Список идентификаторов табличного типа*/
     struct NEnum_array_identifier_list* array_list;
 
 #ifdef OUT2DOT
@@ -298,24 +331,21 @@ struct NRez_value
 #endif
 };
 
-enum EDimensionType
-{
-    INT_INT,
-    INT_ID,
-    ID_INT,
-    ID_ID
-};
-
+/* Вспомогательный тип - одно измерение массива */
 struct NDim
 {
+    /* Режим индексов */
     enum EDimensionType type;
 
-    struct NIdentifier* firstID;
+    /* При INT_ID - второй индекс-переменная*/
     struct NIdentifier* secondID;
 
+    /* При INT_INT - первый индекс*/
     int firstINT;
+    /* При INT_INT - второй индекс*/
     int secondINT;
 
+    /* Следующее измерение*/
     struct NDim* next;
 
 #ifdef OUT2DOT
@@ -324,9 +354,12 @@ struct NDim
 
 };
 
+/* Символ dimensions - измерения массива */
 struct NDimensions
 {
+    /* Первое измерение */
     struct NDim* first;
+    /* Последнее измерение*/
     struct NDim* last;
 
 #ifdef OUT2DOT
@@ -335,52 +368,32 @@ struct NDimensions
 };
 
 
-
+/* Символ read_stmt - оператор ввода*/
 struct NRead_stmt
 {
-    char* var;
-    struct NRead_stmt* next;
-struct NExpr_list* list;
+    /* Выражение, в результат которого следует ввести значение*/
+    struct NExpr_list* list;
 #ifdef OUT2DOT
     char* print_val;
 #endif
 };
 
-
-struct NRead_stmt_list
-{
-    struct NRead_stmt* first;
-    struct NRead_stmt* last;
-
-#ifdef OUT2DOT
-    char* print_val;
-#endif
-};
-struct NPrint_stmt_list
-{
-    struct NPrint_stmt* first;
-    struct NPrint_stmt* last;
-
-#ifdef OUT2DOT
-    char* print_val;
-#endif
-};
-
+/* Символ print_stmt - оператор вывода*/
 struct NPrint_stmt
 {
-    char* var;
+    /* Выражение, результат которого следует вывести */
     struct NExpr_list* list;
-
-    struct NPrint_stmt* next;
-
 #ifdef OUT2DOT
     char* print_val;
 #endif
 };
 
+/* Символ function_call - вызов функции */
 struct NFunction_call
 {
+    /* Идентификатор функции*/
     struct NIdentifier* id;
+    /* Список передаваемых аргументов */
     struct NExpr_list* expr_list;
 
 #ifdef OUT2DOT
@@ -388,18 +401,10 @@ struct NFunction_call
 #endif
 };
 
-struct NZnach_stmt
-{
-
-    struct NExpr* expr;
-
-#ifdef OUT2DOT
-    char* print_val;
-#endif
-};
-
+/* Символ atomic_type - атомарный тип*/
 struct NAtomic_type
 {
+    /* Имя типа */
     char * name;
 
 #ifdef OUT2DOT
@@ -408,8 +413,10 @@ struct NAtomic_type
 
 };
 
+/* Символ array_type - табличный тип*/
 struct NArray_type
 {
+    /* Имя типа*/
     char * name;
 
 #ifdef OUT2DOT
@@ -418,25 +425,28 @@ struct NArray_type
 
 };
 
-
+/* Атомарный идентификатор*/
 struct NEnum_atomic_identifier
 {
-
+    /* Идентификатор*/
     struct NIdentifier* id;
+    /* Следующий атомарный идентификатор */
     struct NEnum_atomic_identifier * next;
 
 #ifdef OUT2DOT
     char* print_val;
 #endif
 
-
 };
-
+/* Табличный идентификатор*/
 struct NEnum_array_identifier
 {
 
+    /* Идентификатор*/
     struct NIdentifier* id;
+    /* Измерения*/
     struct NDimensions* dimensions;
+    /* Следующий табличный идентификатор*/
     struct NEnum_array_identifier * next;
 
 #ifdef OUT2DOT
@@ -446,11 +456,12 @@ struct NEnum_array_identifier
 
 };
 
+/* Символ enum_atomic_identifiers - список атомарных идентификаторов*/
 struct NEnum_atomic_identifier_list
 {
-
-
+    /* Первый идентификатор*/
     struct NEnum_atomic_identifier * first;
+    /* Последний идентификатор*/
     struct NEnum_atomic_identifier * last;
 
 #ifdef OUT2DOT
@@ -459,11 +470,12 @@ struct NEnum_atomic_identifier_list
 
 
 };
-
+/* Символ enum_array_identifiers - список табличных идентификаторов*/
 struct NEnum_array_identifier_list
 {
-
+    /*Первый идентификатор*/
     struct NEnum_array_identifier * first;
+    /* Последний идентификатор*/
     struct NEnum_array_identifier * last;
 
 #ifdef OUT2DOT
@@ -492,7 +504,7 @@ struct NStmt*                        create_stmt_func (struct NFunc_stmt* func_s
 struct NStmt*                        create_stmt_proc (struct NProc_stmt* proc_stmt);
 struct NStmt*                        create_stmt_print (struct NPrint_stmt* print_stmt);
 struct NStmt*                        create_stmt_read (struct NRead_stmt* read_stmt);
-struct NStmt*                        create_stmt_znach (struct NZnach_stmt* znach_stmt);
+struct NStmt*                        create_stmt_znach (struct NZnach_value* znach_stmt);
 struct NStmt*                        create_stmt_decl(struct NDecl* decl);
 struct NFunction_call*               create_function_call(struct NIdentifier* ident, struct NExpr_list* expr_list);
 struct NExpr*                        create_expr_id(struct NIdentifier* ident);
@@ -518,12 +530,8 @@ struct NArg_value*                   create_arg(struct NAtomic_type* type, struc
 struct NRez_value*                   create_rez(struct NAtomic_type* type, struct NIdentifier* id, struct NDimensions* dims);
 struct NDimensions*                         create_int_int_dim(int first,int second);
 struct NDimensions*                         create_int_id_dim(int first,struct NIdentifier* second);
-struct NDim*                         create_id_int_dim(struct NIdentifier* first,int second);
-struct NDim*                         create_id_id_dim(struct NIdentifier* first,struct NIdentifier* second);
 struct NDimensions*                  append_int_int_dim(struct NDimensions* list, int first, int second);
 struct NDimensions*                  append_int_id_dim(struct NDimensions* list,int first,struct NIdentifier* second);
-struct NDimensions*                  append_id_int_dim(struct NDimensions* list, struct NIdentifier* first,int second);
-struct NDimensions*                  append_id_id_dim(struct NDimensions* list,struct NIdentifier* first,struct NIdentifier* second);
 struct NPrint_stmt*                  create_str_print(char* str);
 struct NPrint_stmt*                  create_int_print(int value);
 struct NPrint_stmt_list*             append_str_print(struct NPrint_stmt_list* list, char* str);

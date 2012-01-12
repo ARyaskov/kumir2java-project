@@ -104,6 +104,7 @@ FILE * err;
 
 ":"						{fprintf(logfile,"\nВстретилось двоеточие!");return ':';}
 ","						{fprintf(logfile,"\nВстретилась запятая!");return ',';}
+";"                     {fprintf(logfile,"\nВстретилась запятая!");return ';';}
 
 [\n]+                   {fprintf(logfile,"\nВстретился перевод (множественный) строки!");return ENDL;}
 
@@ -122,18 +123,18 @@ FILE * err;
 
 
 [А-Яа-яA-Za-z_ё@]+[0-9А-Яа-яA-Za-z_ё@]*  {
-/*if (!strcmp(yytext, "да") || !strcmp(yytext, "нет"))
+if (!strcmp(yytext, "да") || !strcmp(yytext, "нет"))
 {
   fprintf(logfile,"\nВстретился логический идентификатор: %s",yytext);
-  strcpy(yylval.string_const, yytext);
-  res = STRING_CONST;
+  strcpy(yylval.bool_const, yytext);
+  res = BOOL_CONST;
 }else
-{*/
+{
           fprintf(logfile,"\nВстретился идентификатор: %s",yytext);
           yylval.id = (char*)malloc(strlen(yytext));
 		  strcpy(yylval.id, yytext);
 		  res = ID;
-/*}*/
+}
 return res;
 		 }
 
@@ -152,11 +153,23 @@ return res;
 
 \"						{ strcpy(literal,""); BEGIN(STRING1);}
 <STRING1>[^\"]+			{ strcat(literal, yytext);}
-<STRING1>\"				{ strlen(literal) != 1 ? fprintf(logfile,  "\nВстретилась строка: \"%s\"", literal) : \
-                            fprintf(logfile,  "\nВстретилась символьная константа: \'%c\'", literal[0]);
-                              BEGIN(INITIAL);
+<STRING1>\"				{
 
-							 }
+ if ( strlen(literal) != 1 )
+{
+  fprintf(logfile,  "\nВстретилась строка: \"%s\"", literal);
+  yylval.string_const = (char*)malloc(strlen(literal));
+  strcpy(yylval.string_const, literal);
+  res = STRING_CONST;
+}else
+{
+  fprintf(logfile,  "\nВстретилась символьная константа: \"%c\"", literal[0]);
+  yylval.char_const = literal[0] ;
+  res = CHAR_CONST;
+}
+  BEGIN(INITIAL);
+  return res;
+        }
 
 
 

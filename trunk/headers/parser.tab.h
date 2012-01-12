@@ -38,47 +38,48 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
-     INT_CONST = 258,
-     STRING_CONST = 259,
-     DOUBLE_CONST = 260,
-     CHAR_CONST = 261,
-     ID = 262,
-     ALG = 263,
-     ARG = 264,
-     VVOD = 265,
-     VESCH = 266,
-     VESCHTAB = 267,
-     VYVOD = 268,
-     DA = 269,
-     ZNACH = 270,
-     KON = 271,
-     LIT = 272,
-     LITTAB = 273,
-     LOG = 274,
-     LOGTAB = 275,
-     NACH = 276,
-     NET = 277,
-     NS = 278,
-     REZ = 279,
-     SIM = 280,
-     SIMTAB = 281,
-     CEL = 282,
-     CELTAB = 283,
-     ENDL = 284,
-     SPACE = 285,
-     BOGUS = 286,
-     ASSMNT = 287,
-     EQ = 288,
-     NEQ = 289,
-     LTEQ = 290,
-     GTEQ = 291,
-     LT = 292,
-     GT = 293,
-     MINUS = 294,
-     PLUS = 295,
-     DIV = 296,
-     MUL = 297,
-     POW = 298
+     BOOL_CONST = 258,
+     INT_CONST = 259,
+     STRING_CONST = 260,
+     DOUBLE_CONST = 261,
+     CHAR_CONST = 262,
+     ID = 263,
+     ALG = 264,
+     ARG = 265,
+     VVOD = 266,
+     VESCH = 267,
+     VESCHTAB = 268,
+     VYVOD = 269,
+     DA = 270,
+     ZNACH = 271,
+     KON = 272,
+     LIT = 273,
+     LITTAB = 274,
+     LOG = 275,
+     LOGTAB = 276,
+     NACH = 277,
+     NET = 278,
+     NS = 279,
+     REZ = 280,
+     SIM = 281,
+     SIMTAB = 282,
+     CEL = 283,
+     CELTAB = 284,
+     ENDL = 285,
+     SPACE = 286,
+     BOGUS = 287,
+     ASSMNT = 288,
+     EQ = 289,
+     NEQ = 290,
+     LTEQ = 291,
+     GTEQ = 292,
+     LT = 293,
+     GT = 294,
+     MINUS = 295,
+     PLUS = 296,
+     DIV = 297,
+     MUL = 298,
+     POW = 299
    };
 #endif
 
@@ -89,39 +90,35 @@ typedef union YYSTYPE
 {
 
 
-      /*  BOOL    bool_const;*/
-        int     int_const;
-        char    char_const;
-        char*   string_const;
-        double  double_const;
-        char*   id;
+    char*    bool_const;
+    int     int_const;
+    char    char_const;
+    char*   string_const;
+    double  double_const;
+    char*   id;
 
-		struct NProgram*     Program;
-		struct NStmt*        Stmt;
-		struct NStmt_list*   Stmt_list;
-		struct NExpr*        Expr;
-		struct NExpr_list*   Expr_list;
-		struct NFunc_stmt*   Func_stmt;
-		struct NProc_stmt*   Proc_stmt;
-		struct NIdentifier*  Identifier;
-		struct NZnach_value* Znach_value;
-		struct NDecl*        Decl;
-		struct NDecl_list*   Decl_list;
-		struct NEnum_identifiers*        Enum_identifiers;
-		struct NEnum_atomic_identifiers* Enum_atomic_identifiers;
-		struct NEnum_array_identifiers*  Enum_array_identifiers;
-		struct NParam_list*  Param_list;
-		struct NParam*       Param;
-		struct NArg_value*   Arg_value;
-		struct NRez_value*   Rez_value;
-		struct NDimensions*  Dimensions;
-		struct NType*        Type;
-		struct NAtomic_type* Atomic_type;
-		struct NArray_type*  Array_type;
-		/*struct NIndexes*     Indexes;*/
-		struct NRead_stmt_list*   Read_list;
-		struct NPrint_stmt_list*  Print_list;
-		struct NFunction_call*    Function_Call;
+    struct NProgram*     Program;
+    struct NStmt*        Stmt;
+    struct NStmt_list*   Stmt_list;
+    struct NExpr*        Expr;
+    struct NExpr_list*   Expr_list;
+    struct NFunc_stmt*   Func_stmt;
+    struct NProc_stmt*   Proc_stmt;
+    struct NIdentifier*  Identifier;
+    struct NZnach_value* Znach_value;
+    struct NDecl*        Decl;
+    struct NEnum_atomic_identifiers* Enum_atomic_identifiers;
+    struct NEnum_array_identifiers*  Enum_array_identifiers;
+    struct NParam_list*  Param_list;
+    struct NParam*       Param;
+    struct NArg_value*   Arg_value;
+    struct NRez_value*   Rez_value;
+    struct NDimensions*  Dimensions;
+    struct NAtomic_type* Atomic_type;
+    struct NArray_type*  Array_type;
+    struct NRead_stmt_list*   Read_list;
+    struct NPrint_stmt_list*  Print_list;
+    struct NFunction_call*    Function_Call;
 
 
 

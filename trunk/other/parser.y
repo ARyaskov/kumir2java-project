@@ -302,19 +302,11 @@ REZ SPACE array_type SPACE enum_array_identifiers      {$$=create_rez_from_array
 dimensions:
 INT_CONST ':' INT_CONST                           {$$=create_int_int_dim($1,$3);
                                                   }
-| identifier ':' identifier                        {$$=create_id_id_dim($1,$3);
-                                                   }
 | INT_CONST ':' identifier                         {$$=create_int_id_dim($1,$3);
-                                                   }
-| identifier ':' INT_CONST                         {$$=create_int_id_dim($1, $3);
                                                    }
 | dimensions ',' INT_CONST ':' INT_CONST           {$$=append_int_int_dim($1, $3, $5);
                                                    }
-| dimensions ',' identifier ':' identifier         {$$=append_id_id_dim($1, $3, $5);
-                                                   }
 | dimensions ',' INT_CONST ':' identifier          {$$=append_int_id_dim($1, $3, $5);
-                                                   }
-| dimensions ',' identifier ':' INT_CONST          {$$=append_id_int_dim($1, $3, $5);
                                                    }
 ;
 

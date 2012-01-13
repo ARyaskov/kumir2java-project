@@ -1116,15 +1116,16 @@ if ( strlen(literal) != 1 )
   return res;
         }
 	YY_BREAK
-case 55:
-YY_RULE_SETUP
-ECHO;
-	YY_BREAK
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(COMMENT):
 case YY_STATE_EOF(STRING1):
 case YY_STATE_EOF(STRING2):
-	yyterminate();
+{ static int once = 0; return once++ ? 0 : '\n' }
+	YY_BREAK
+case 55:
+YY_RULE_SETUP
+ECHO;
+	YY_BREAK
 
 	case YY_END_OF_BUFFER:
 		{

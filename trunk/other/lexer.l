@@ -194,7 +194,7 @@ if ( strlen(literal) != 1 )
         }
 
 
-
+<<EOF>> { static int once = 0; return once++ ? 0 : '\n' }
 
 
 %%

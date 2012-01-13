@@ -68,18 +68,20 @@
      ENDL = 285,
      SPACE = 286,
      BOGUS = 287,
-     ASSMNT = 288,
-     EQ = 289,
-     NEQ = 290,
-     LTEQ = 291,
-     GTEQ = 292,
-     LT = 293,
-     GT = 294,
-     MINUS = 295,
-     PLUS = 296,
-     DIV = 297,
-     MUL = 298,
-     POW = 299
+     EOF = 288,
+     ASSMNT = 289,
+     EQ = 290,
+     NEQ = 291,
+     LTEQ = 292,
+     GTEQ = 293,
+     LT = 294,
+     GT = 295,
+     MINUS = 296,
+     PLUS = 297,
+     DIV = 298,
+     MUL = 299,
+     POW = 300,
+     UMINUS = 301
    };
 #endif
 
@@ -107,8 +109,8 @@ typedef union YYSTYPE
     struct NIdentifier*  Identifier;
     struct NZnach_value* Znach_value;
     struct NDecl*        Decl;
-    struct NEnum_atomic_identifiers* Enum_atomic_identifiers;
-    struct NEnum_array_identifiers*  Enum_array_identifiers;
+    struct NEnum_atomic_identifier_list* Enum_atomic_identifier_list;
+    struct NEnum_array_identifier_list*  Enum_array_identifier_list;
     struct NParam_list*  Param_list;
     struct NParam*       Param;
     struct NArg_value*   Arg_value;
@@ -116,8 +118,8 @@ typedef union YYSTYPE
     struct NDimensions*  Dimensions;
     struct NAtomic_type* Atomic_type;
     struct NArray_type*  Array_type;
-    struct NRead_stmt_list*   Read_list;
-    struct NPrint_stmt_list*  Print_list;
+    struct NRead_stmt*   Read;
+    struct NPrint_stmt*  Print;
     struct NFunction_call*    Function_Call;
 
 

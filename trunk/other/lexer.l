@@ -41,6 +41,7 @@ FILE * err;
 
 
 %}
+%option yylineno
 %x COMMENT
 %x STRING1
 %x STRING2
@@ -54,7 +55,6 @@ FILE * err;
 						  fprintf(logfile,"\nКонец комментария\n");
 						  BEGIN(INITIAL);
 						}
-
 
 
 "алг"					{fprintf(logfile,"\nВстретилось ключевое слово \"алг\"!");return ALG;}
@@ -106,7 +106,11 @@ FILE * err;
 ","						{fprintf(logfile,"\nВстретилась запятая!");return ',';}
 ";"                     {fprintf(logfile,"\nВстретилась запятая!");return ';';}
 
-[\n]+                   {fprintf(logfile,"\nВстретился перевод (множественный) строки!");return ENDL;}
+[\n]+                   {
+                          fprintf(logfile,"\nВстретился перевод (множественный) строки!");
+                          return ENDL;
+                          yylineno++;
+                          }
 
 
 
@@ -140,7 +144,7 @@ return res;
 
 
 
-		 [ \t]+                   {fprintf(logfile,"\nВстретился пробел (несколько)!");return SPACE;}
+
 
 
 \$[0-9A-F]+			{
@@ -193,8 +197,6 @@ if ( strlen(literal) != 1 )
   return res;
         }
 
-
-<<EOF>> { static int once = 0; return once++ ? 0 : '\n' }
 
 
 %%

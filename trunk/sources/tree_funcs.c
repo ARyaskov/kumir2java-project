@@ -224,6 +224,12 @@ void makeNode(char* from, char* to)
 
         fprintf(dotfile, "\n%s", temp);
 
+        fprintf(locsfile,fromWithoutQuotes);
+        fprintf(locsfile," ");
+        char buf[10]={};
+        sprintf(buf, "%d", yylloc.first_line);
+        fprintf(locsfile, buf);
+        fprintf(locsfile, "\n");
 
     }
 

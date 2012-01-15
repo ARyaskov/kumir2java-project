@@ -43,11 +43,12 @@
 == Добавление новых программ для модульного тестирования ==
 Всё просто - в файл batchUnitTests.bat (желательно в конец, но обязательно до строки @echo "Unittesting end...") стоит добавить строку вида
 <code language="bat">
-@parser.exe unittests\procsAndFuncs.kum unittests\procsAndFuncs.dot &
+@parser.exe unittests\procsAndFuncs.kum unittests\procsAndFuncs.dot unittests\procsAndFuncs.loc &
 </code>
  * @ - подавляет вывод данной строки на консоль
  * unittests\procsAndFuncs.kum - где находится испытуемая программа
  * unittests\procsAndFuncs.dot - куда стоит положить результат
+ * unittests\procsAndFuncs.loc - информация о положениях в тексте для семантического анализатора
  * & - соединяет команду со следующей (если Вы добавили её в конец, перед @echo "Unittesting end...", то & позволит echo выполниться, иначе обработчик посчитает эти две строки за одну команду).
 
 Теперь в файл batchEncode.bat так же, до @echo "Encoding end..." добавляем строки вида

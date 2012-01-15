@@ -22,6 +22,9 @@ extern int yylex(void);
 	extern int yyparse();
 
 
+
+
+
 %}
 
 %debug
@@ -100,9 +103,8 @@ extern int yylex(void);
 %token DA  ZNACH KON
 %token LIT LITTAB LOG LOGTAB NACH NET NS
 %token REZ SIM SIMTAB CEL CELTAB
-%token ENDL SPACE
+%token ENDL
 %token BOGUS
-%token EOF
 
 %right ASSMNT
 %left GT LT GTEQ LTEQ NEQ EQ
@@ -110,13 +112,14 @@ extern int yylex(void);
 %left MUL DIV
 %left POW
 %left UMINUS
+%left ']'
 %nonassoc ')'
 
 
 %%
 
 program:
-stmt_list EOF  {$$=create_program($1);
+stmt_list  {$$=create_program($1);
             }
 ;
 
@@ -234,9 +237,10 @@ ID
 ;
 
 decl:
-atomic_type SPACE enum_atomic_identifier_list ENDL           {$$=create_from_atomic_decl($1,$3);
+atomic_type enum_atomic_identifier_list ENDL           {
+                                                         $$=create_from_atomic_decl($1,$2);
                                                          }
-|  array_type SPACE enum_array_identifier_list ENDL           {$$=create_from_array_decl($1,$3);
+|  array_type enum_array_identifier_list ENDL           {$$=create_from_array_decl($1,$2);
                                                           }
 ;
 
@@ -245,12 +249,6 @@ enum_atomic_identifier_list :
 identifier                                   {$$=create_enum_atomic_identifier_list($1);
                                              }
 | enum_atomic_identifier_list ',' identifier 	             {$$=append_enum_atomic_identifier_list($1,$3);
-                                                       }
-| enum_atomic_identifier_list SPACE ',' identifier 	     {$$=append_enum_atomic_identifier_list($1,$4);
-                                                     }
-| enum_atomic_identifier_list ',' SPACE identifier 	     {$$=append_enum_atomic_identifier_list($1,$4);
-                                                     }
-| enum_atomic_identifier_list SPACE ',' SPACE identifier 	 {$$=append_enum_atomic_identifier_list($1,$5);
                                                        }
 ;
 
@@ -262,15 +260,15 @@ identifier '[' dimensions ']'                       {$$=create_enum_array_identi
 ;
 
 func_stmt:
-ALG SPACE atomic_type SPACE identifier ENDL NACH ENDL stmt_list KON ENDL          {$$=create_func($3, $5,NULL, $9);
+ALG atomic_type identifier ENDL NACH ENDL stmt_list KON ENDL          {$$=create_func($2, $3,NULL, $7);
                                                                                        }
-| ALG SPACE atomic_type SPACE identifier '(' param_list ')' ENDL NACH stmt_list KON ENDL {$$=create_func($3, $5,$7, $11);
+| ALG atomic_type identifier '(' param_list ')' ENDL NACH stmt_list KON ENDL {$$=create_func($2, $3,$5, $9);
                                                                                          }
 ;
 proc_stmt:
-ALG SPACE identifier ENDL NACH ENDL stmt_list KON ENDL                      {$$=create_proc($3, NULL , $7);
+ALG identifier ENDL NACH ENDL stmt_list KON ENDL                      {$$=create_proc($2, NULL , $6);
                                                                             }
-| ALG SPACE identifier '(' param_list ')' ENDL NACH ENDL stmt_list KON ENDL  {$$=create_proc($3,$5,$10);
+| ALG identifier '(' param_list ')' ENDL NACH ENDL stmt_list KON ENDL  {$$=create_proc($2,$4,$9);
                                                                              }
 ;
 
@@ -293,16 +291,16 @@ arg_value                                         {$$=create_from_arg_rezvalue($
                                                  }
 ;
 arg_value:
-ARG SPACE atomic_type SPACE enum_atomic_identifier_list     {$$=create_arg_from_atomic($3, $5);
+ARG atomic_type enum_atomic_identifier_list     {$$=create_arg_from_atomic($2, $3);
                                                         }
-| ARG SPACE array_type SPACE enum_array_identifier_list      {$$=create_arg_from_array($3, $5);
+| ARG array_type enum_array_identifier_list      {$$=create_arg_from_array($2, $3);
                                                          }
 ;
 
 rez_value:
-REZ SPACE array_type SPACE enum_array_identifier_list      {$$=create_rez_from_array($3, $5);
+REZ array_type enum_array_identifier_list      {$$=create_rez_from_array($2, $3);
                                                        }
-| REZ SPACE atomic_type SPACE enum_atomic_identifier_list   {$$=create_rez_from_atomic($3, $5);
+| REZ atomic_type enum_atomic_identifier_list   {$$=create_rez_from_atomic($2, $3);
                                                         }
 ;
 
@@ -347,23 +345,22 @@ CEL  {$$=create_atomic_type("цел");
 ;
 
 print:
-VYVOD SPACE expr_list ENDL  {$$=create_expr_list_print($3);
+VYVOD expr_list ENDL  {$$=create_expr_list_print($2);
                         }
 ;
 read:
-VVOD SPACE expr_list  ENDL  {$$=create_expr_list_read($3);
+VVOD expr_list  ENDL  {$$=create_expr_list_read($2);
                         }
 ;
 
 %%
 
-
 void yyerror (char const* s)
 {
     printf("%s\n",s);
-    printf("\nERROR on line: %d:%d\n", yylloc.first_line,yylloc.last_line);
+    printf("ERROR on line: %d and column: %d", yylloc.first_line,yylloc.last_column);
     getchar();
-    exit(1);
+    exit(0);
 }
 
 int main (int argc, char* argv[])
@@ -405,6 +402,12 @@ prevSalt=0;
     // FILE* file;
 
     logfile = fopen("output\\log.txt", "wt");
+
+    char* locBuf = safeAlloc(1);
+
+    strcpy(locBuf,argv[3]);
+
+    locsfile = fopen(locBuf,"w");
     //
     yyin = fopen(argv[1], "r");
 
@@ -417,11 +420,11 @@ prevSalt=0;
 
     fclose(dotfile);
     fclose(logfile);
+    fclose(locsfile);
     garbageCollector();
     // getchar();
     return 0;
 }
-
 
 
 

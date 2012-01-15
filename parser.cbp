@@ -12,6 +12,7 @@
 				<Option object_output="Debug Win32" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters="unittests\procsAndFuncs2.kum unittests\procsAndFuncs2.dot" />
 				<Compiler>
 					<Add option="-w" />
 					<Add option="-g" />
@@ -52,6 +53,7 @@
 			</Target>
 		</Build>
 		<Unit filename="headers\parser.tab.h" />
+		<Unit filename="headers\tree_funcs.h" />
 		<Unit filename="headers\tree_structs.h" />
 		<Unit filename="other\lexer.l">
 			<Option weight="100" />
@@ -68,7 +70,7 @@
 		<Unit filename="sources\parser.tab.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="sources\tree_structs.c">
+		<Unit filename="sources\tree_funcs.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Extensions>

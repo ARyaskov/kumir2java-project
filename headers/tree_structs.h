@@ -21,6 +21,7 @@
 char* before_val;
 FILE * dotfile;
 FILE * logfile;
+FILE * locsfile;
 
 int hashes[HASH_ARRAY_SZ];
 int hash_pointer;

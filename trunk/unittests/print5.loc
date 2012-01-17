@@ -1,0 +1,12 @@
+main 1
+create_ident!1 1
+нет 3
+create_expr_list!2 4
+create_expr_list_print!3 4
+create_stmt_print!4 4
+create_stmt_list!5 4
+create_proc!6 5
+create_proc!6 5
+create_stmt_proc!7 5
+create_stmt_list!8 5
+create_program!9 5

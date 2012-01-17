@@ -12,7 +12,7 @@
 				<Option object_output="Debug Win32" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="unittests\procsAndFuncs2.kum unittests\procsAndFuncs2.dot" />
+				<Option parameters="unittests\procsAndFuncs1.kum unittests\procsAndFuncs1.dot unittests\procsAndFuncs1.loc" />
 				<Compiler>
 					<Add option="-w" />
 					<Add option="-g" />
@@ -29,11 +29,11 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
+					<Add option="-O2" />
+					<Add option="-W -std=c99" />
 					<Add option="-DWIN32" />
 					<Add option="-DNDEBUG" />
 					<Add option="-D_CONSOLE" />
-					<Add option="-W" />
-					<Add option="-O2" />
 				</Compiler>
 			</Target>
 			<Target title="WithoutCRT Win32">

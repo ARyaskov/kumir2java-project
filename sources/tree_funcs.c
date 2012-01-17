@@ -226,7 +226,7 @@ void makeNode(char* from, char* to)
 
         fprintf(locsfile,fromWithoutQuotes);
         fprintf(locsfile," ");
-        char buf[10]={};
+        char buf[10]= {};
         sprintf(buf, "%d", yylloc.first_line);
         fprintf(locsfile, buf);
         fprintf(locsfile, "\n");
@@ -643,7 +643,7 @@ struct NExpr* create_brackets_expr(struct NExpr* expr_in)
 
 
 #ifdef OUT2DOT
-    uniqID = makeUniqueID("( )");
+    uniqID = makeUniqueID("()");
     expr->print_val = uniqID;
     makeNode(uniqID, expr->subexpr->print_val);
 #endif
@@ -672,6 +672,16 @@ struct NExpr* create_const_expr (enum Const_type type, union Const_values value)
         expr->const_type = Int;
         expr->val.Int = value.Int;
 
+        char buf[10]= {};
+        sscanf(buf, "%d", value.Int);
+
+        fprintf(locsfile, buf);
+        fprintf(locsfile," ");
+        char buf2[10]= {};
+        sprintf(buf2, "%d", yylloc.first_line);
+        fprintf(locsfile, buf2);
+        fprintf(locsfile, "\n");
+
 #ifdef OUT2DOT
         expr->print_val = (char*)safeAlloc(ALLOC_SZ);
         strcpy(expr->print_val, "Целая константа: ");
@@ -687,18 +697,34 @@ struct NExpr* create_const_expr (enum Const_type type, union Const_values value)
         expr->val.Bool = (char*)safeAlloc(4);
         strcpy(expr->val.Bool, value.Bool);
 
+        fprintf(locsfile, value.Bool);
+        fprintf(locsfile," ");
+        char buf[10]= {};
+        sprintf(buf, "%d", yylloc.first_line);
+        fprintf(locsfile, buf);
+        fprintf(locsfile, "\n");
 #ifdef OUT2DOT
         expr->print_val = (char*)safeAlloc(ALLOC_SZ);
         strcpy(expr->print_val, strcat_const("Логическая константа: ",expr->val.Bool) );
 
 #endif
-           }
-           break;
+    }
+    break;
     case Double:
     {
         expr->expr_type = DOUBLE_CONST;
         expr->const_type = Double;
         expr->val.Double = value.Double;
+
+        char buf[10]= {};
+        sscanf(buf, "%f", value.Double);
+
+        fprintf(locsfile, buf);
+        fprintf(locsfile," ");
+        char buf2[10]= {};
+        sprintf(buf2, "%d", yylloc.first_line);
+        fprintf(locsfile, buf2);
+        fprintf(locsfile, "\n");
 
 #ifdef OUT2DOT
         expr->print_val = (char*)safeAlloc(ALLOC_SZ);
@@ -715,6 +741,13 @@ struct NExpr* create_const_expr (enum Const_type type, union Const_values value)
         expr->expr_type = CHAR_CONST;
         expr->const_type = Char;
         expr->val.Char = value.Char;
+
+        fprintf(locsfile, value.Char);
+        fprintf(locsfile," ");
+        char buf[10]= {};
+        sprintf(buf, "%d", yylloc.first_line);
+        fprintf(locsfile, buf);
+        fprintf(locsfile, "\n");
 
 #ifdef OUT2DOT
         expr->print_val = (char*)safeAlloc(ALLOC_SZ);
@@ -736,6 +769,12 @@ struct NExpr* create_const_expr (enum Const_type type, union Const_values value)
         expr->const_type = String;
         expr->val.String = value.String;
 
+        fprintf(locsfile, value.String);
+        fprintf(locsfile," ");
+        char buf[10]= {};
+        sprintf(buf, "%d", yylloc.first_line);
+        fprintf(locsfile, buf);
+        fprintf(locsfile, "\n");
 #ifdef OUT2DOT
         expr->print_val = (char*)safeAlloc(ALLOC_SZ);
         strcpy(expr->print_val, "Строковая константа: ");
@@ -751,6 +790,14 @@ struct NExpr* create_const_expr (enum Const_type type, union Const_values value)
 
 #ifdef OUT2DOT
         expr->print_val = (char*)safeAlloc(ALLOC_SZ);
+
+        fprintf(locsfile, value.Id);
+        fprintf(locsfile," ");
+        char buf[10]= {};
+        sprintf(buf, "%d", yylloc.first_line);
+        fprintf(locsfile, buf);
+        fprintf(locsfile, "\n");
+
         strcpy(expr->print_val, "Идентификатор: ");
         strcat(expr->print_val, expr->val.Id  );
 #endif
@@ -907,6 +954,12 @@ struct NIdentifier* create_ident(char* id)
     ident->name = (char*)safeAlloc( strlen((const char*)id));
     strcpy(ident->name, id);
 
+    fprintf(locsfile, ident->name);
+    fprintf(locsfile," ");
+    char buf[10]= {};
+    sprintf(buf, "%d", yylloc.first_line);
+    fprintf(locsfile, buf);
+    fprintf(locsfile, "\n");
 
 
 #ifdef OUT2DOT
@@ -1586,13 +1639,13 @@ struct NEnum_atomic_identifier_list* append_enum_atomic_identifier_list(struct N
 {
     char* uniqID;
     struct NEnum_atomic_identifier* tempAtomicId = (struct NEnum_atomic_identifier*)safeAlloc(sizeof(struct NEnum_atomic_identifier));
-	tempAtomicId->print_val = (char*)safeAlloc(ALLOC_SZ);
+    tempAtomicId->print_val = (char*)safeAlloc(ALLOC_SZ);
     if (id)
     {
         if (list)
         {
-			tempAtomicId->id = id;
-			strcpy(tempAtomicId->print_val, id->print_val);
+            tempAtomicId->id = id;
+            strcpy(tempAtomicId->print_val, id->print_val);
             list->last->next = tempAtomicId;
             list->last = tempAtomicId;
 
@@ -1629,8 +1682,9 @@ struct NEnum_array_identifier_list* append_enum_array_identifier_list(struct NEn
     {
         if (list)
         {
-						tempArrayId->id = id;
-			strcpy(tempArrayId->print_val, id->print_val);
+            tempArrayId->print_val = (char*)safeAlloc(ALLOC_SZ);
+            tempArrayId->id = id;
+            strcpy(tempArrayId->print_val, id->print_val);
             list->last->next = tempArrayId;
             list->last->dimensions = dimensions;
             list->last = tempArrayId;
@@ -1638,8 +1692,8 @@ struct NEnum_array_identifier_list* append_enum_array_identifier_list(struct NEn
 
 #ifdef OUT2DOT
             uniqID = makeUniqueID("append_enum_array_identifier_list");
-            list->print_val = uniqID;
-            makeNode(uniqID, list->print_val);
+            // list->print_val = uniqID;
+            makeNode(list->print_val, uniqID);
             makeNode(uniqID, tempArrayId->print_val);
 #endif
 

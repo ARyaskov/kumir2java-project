@@ -143,7 +143,7 @@ ENDL               {$$=create_stmt_expr(NULL);
                        }
 | read      {$$=create_stmt_read($1);
                       }
-| znach_value      {$$=create_stmt_znach($1);
+| znach_value  ENDL    {$$=create_stmt_znach($1);
                    }
 | decl             {$$=create_stmt_decl($1);
                    }
@@ -280,7 +280,7 @@ param                                        {$$=create_param_list($1);
 ;
 
 znach_value:
-ZNACH ASSMNT expr  ENDL                         {$$=create_znachvalue($3);
+ZNACH ASSMNT expr                        {$$=create_znachvalue($3);
                                             }
 ;
 

@@ -1,4 +1,4 @@
 @call batchUnitTests.bat &
 @call batchEncode.bat &
 @call batchDiff.bat &
- @call batchDOT2PNG.bat
+@call batchDOT2PNG.bat

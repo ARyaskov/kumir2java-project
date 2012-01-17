@@ -19,7 +19,7 @@ Grammar
     7     | proc_stmt
     8     | print
     9     | read
-   10     | znach_value
+   10     | znach_value ENDL
    11     | decl
 
    12 expr: function_call
@@ -72,7 +72,7 @@ Grammar
    50 param_list: param
    51           | param_list ';' param
 
-   52 znach_value: ZNACH ASSMNT expr ENDL
+   52 znach_value: ZNACH ASSMNT expr
 
    53 param: arg_value
    54      | rez_value
@@ -143,7 +143,7 @@ SIM (281) 70
 SIMTAB (282) 65
 CEL (283) 68
 CELTAB (284) 63
-ENDL (285) 4 5 40 41 46 47 48 49 52 73 74
+ENDL (285) 4 5 10 40 41 46 47 48 49 73 74
 BOGUS (286)
 ASSMNT (287) 21 52
 EQ (288) 32
@@ -384,7 +384,7 @@ state 12
 
 state 13
 
-   52 znach_value: ZNACH . ASSMNT expr ENDL
+   52 znach_value: ZNACH . ASSMNT expr
 
     ASSMNT  shift, and go to state 45
 
@@ -644,9 +644,9 @@ state 35
 
 state 36
 
-   10 stmt: znach_value .
+   10 stmt: znach_value . ENDL
 
-    $default  reduce using rule 10 (stmt)
+    ENDL  shift, and go to state 66
 
 
 state 37
@@ -655,8 +655,8 @@ state 37
 
     ID  shift, and go to state 6
 
-    identifier                  go to state 66
-    enum_array_identifier_list  go to state 67
+    identifier                  go to state 67
+    enum_array_identifier_list  go to state 68
 
 
 state 38
@@ -665,8 +665,8 @@ state 38
 
     ID  shift, and go to state 6
 
-    identifier                   go to state 68
-    enum_atomic_identifier_list  go to state 69
+    identifier                   go to state 69
+    enum_atomic_identifier_list  go to state 70
 
 
 state 39
@@ -688,8 +688,8 @@ state 41
    48 proc_stmt: ALG identifier . ENDL NACH ENDL stmt_list KON ENDL
    49          | ALG identifier . '(' param_list ')' ENDL NACH ENDL stmt_list KON ENDL
 
-    ENDL  shift, and go to state 70
-    '('   shift, and go to state 71
+    ENDL  shift, and go to state 71
+    '('   shift, and go to state 72
 
 
 state 42
@@ -699,7 +699,7 @@ state 42
 
     ID  shift, and go to state 6
 
-    identifier  go to state 72
+    identifier  go to state 73
 
 
 state 43
@@ -707,7 +707,7 @@ state 43
    38 expr_list: expr_list . ',' expr
    74 read: VVOD expr_list . ENDL
 
-    ENDL  shift, and go to state 73
+    ENDL  shift, and go to state 74
     ','   shift, and go to state 63
 
 
@@ -716,13 +716,13 @@ state 44
    38 expr_list: expr_list . ',' expr
    73 print: VYVOD expr_list . ENDL
 
-    ENDL  shift, and go to state 74
+    ENDL  shift, and go to state 75
     ','   shift, and go to state 63
 
 
 state 45
 
-   52 znach_value: ZNACH ASSMNT . expr ENDL
+   52 znach_value: ZNACH ASSMNT . expr
 
     BOOL_CONST    shift, and go to state 1
     INT_CONST     shift, and go to state 2
@@ -735,7 +735,7 @@ state 45
     MINUS         shift, and go to state 24
     '('           shift, and go to state 25
 
-    expr           go to state 75
+    expr           go to state 76
     function_call  go to state 30
     identifier     go to state 32
 
@@ -787,7 +787,7 @@ state 47
     DIV     shift, and go to state 59
     MUL     shift, and go to state 60
     POW     shift, and go to state 61
-    ')'     shift, and go to state 76
+    ')'     shift, and go to state 77
 
 
 state 48
@@ -819,7 +819,7 @@ state 50
     MINUS         shift, and go to state 24
     '('           shift, and go to state 25
 
-    expr           go to state 77
+    expr           go to state 78
     function_call  go to state 30
     identifier     go to state 32
 
@@ -839,7 +839,7 @@ state 51
     MINUS         shift, and go to state 24
     '('           shift, and go to state 25
 
-    expr           go to state 78
+    expr           go to state 79
     function_call  go to state 30
     identifier     go to state 32
 
@@ -859,7 +859,7 @@ state 52
     MINUS         shift, and go to state 24
     '('           shift, and go to state 25
 
-    expr           go to state 79
+    expr           go to state 80
     function_call  go to state 30
     identifier     go to state 32
 
@@ -879,7 +879,7 @@ state 53
     MINUS         shift, and go to state 24
     '('           shift, and go to state 25
 
-    expr           go to state 80
+    expr           go to state 81
     function_call  go to state 30
     identifier     go to state 32
 
@@ -899,7 +899,7 @@ state 54
     MINUS         shift, and go to state 24
     '('           shift, and go to state 25
 
-    expr           go to state 81
+    expr           go to state 82
     function_call  go to state 30
     identifier     go to state 32
 
@@ -919,7 +919,7 @@ state 55
     MINUS         shift, and go to state 24
     '('           shift, and go to state 25
 
-    expr           go to state 82
+    expr           go to state 83
     function_call  go to state 30
     identifier     go to state 32
 
@@ -939,7 +939,7 @@ state 56
     MINUS         shift, and go to state 24
     '('           shift, and go to state 25
 
-    expr           go to state 83
+    expr           go to state 84
     function_call  go to state 30
     identifier     go to state 32
 
@@ -959,7 +959,7 @@ state 57
     MINUS         shift, and go to state 24
     '('           shift, and go to state 25
 
-    expr           go to state 84
+    expr           go to state 85
     function_call  go to state 30
     identifier     go to state 32
 
@@ -979,7 +979,7 @@ state 58
     MINUS         shift, and go to state 24
     '('           shift, and go to state 25
 
-    expr           go to state 85
+    expr           go to state 86
     function_call  go to state 30
     identifier     go to state 32
 
@@ -999,7 +999,7 @@ state 59
     MINUS         shift, and go to state 24
     '('           shift, and go to state 25
 
-    expr           go to state 86
+    expr           go to state 87
     function_call  go to state 30
     identifier     go to state 32
 
@@ -1019,7 +1019,7 @@ state 60
     MINUS         shift, and go to state 24
     '('           shift, and go to state 25
 
-    expr           go to state 87
+    expr           go to state 88
     function_call  go to state 30
     identifier     go to state 32
 
@@ -1039,7 +1039,7 @@ state 61
     MINUS         shift, and go to state 24
     '('           shift, and go to state 25
 
-    expr           go to state 88
+    expr           go to state 89
     function_call  go to state 30
     identifier     go to state 32
 
@@ -1066,7 +1066,7 @@ state 63
     MINUS         shift, and go to state 24
     '('           shift, and go to state 25
 
-    expr           go to state 89
+    expr           go to state 90
     function_call  go to state 30
     identifier     go to state 32
 
@@ -1088,7 +1088,7 @@ state 64
 
     expr           go to state 29
     function_call  go to state 30
-    expr_list      go to state 90
+    expr_list      go to state 91
     identifier     go to state 32
 
 
@@ -1109,86 +1109,93 @@ state 65
 
     expr           go to state 29
     function_call  go to state 30
-    expr_list      go to state 91
+    expr_list      go to state 92
     identifier     go to state 32
 
 
 state 66
 
-   44 enum_array_identifier_list: identifier . '[' dimensions ']'
+   10 stmt: znach_value ENDL .
 
-    '['  shift, and go to state 92
+    $default  reduce using rule 10 (stmt)
 
 
 state 67
 
-   41 decl: array_type enum_array_identifier_list . ENDL
-   45 enum_array_identifier_list: enum_array_identifier_list . ',' identifier '[' dimensions ']'
+   44 enum_array_identifier_list: identifier . '[' dimensions ']'
 
-    ENDL  shift, and go to state 93
-    ','   shift, and go to state 94
+    '['  shift, and go to state 93
 
 
 state 68
+
+   41 decl: array_type enum_array_identifier_list . ENDL
+   45 enum_array_identifier_list: enum_array_identifier_list . ',' identifier '[' dimensions ']'
+
+    ENDL  shift, and go to state 94
+    ','   shift, and go to state 95
+
+
+state 69
 
    42 enum_atomic_identifier_list: identifier .
 
     $default  reduce using rule 42 (enum_atomic_identifier_list)
 
 
-state 69
+state 70
 
    40 decl: atomic_type enum_atomic_identifier_list . ENDL
    43 enum_atomic_identifier_list: enum_atomic_identifier_list . ',' identifier
 
-    ENDL  shift, and go to state 95
-    ','   shift, and go to state 96
-
-
-state 70
-
-   48 proc_stmt: ALG identifier ENDL . NACH ENDL stmt_list KON ENDL
-
-    NACH  shift, and go to state 97
+    ENDL  shift, and go to state 96
+    ','   shift, and go to state 97
 
 
 state 71
 
-   49 proc_stmt: ALG identifier '(' . param_list ')' ENDL NACH ENDL stmt_list KON ENDL
+   48 proc_stmt: ALG identifier ENDL . NACH ENDL stmt_list KON ENDL
 
-    ARG  shift, and go to state 98
-    REZ  shift, and go to state 99
-
-    param_list  go to state 100
-    param       go to state 101
-    arg_value   go to state 102
-    rez_value   go to state 103
+    NACH  shift, and go to state 98
 
 
 state 72
 
-   46 func_stmt: ALG atomic_type identifier . ENDL NACH ENDL stmt_list KON ENDL
-   47          | ALG atomic_type identifier . '(' param_list ')' ENDL NACH stmt_list KON ENDL
+   49 proc_stmt: ALG identifier '(' . param_list ')' ENDL NACH ENDL stmt_list KON ENDL
 
-    ENDL  shift, and go to state 104
-    '('   shift, and go to state 105
+    ARG  shift, and go to state 99
+    REZ  shift, and go to state 100
+
+    param_list  go to state 101
+    param       go to state 102
+    arg_value   go to state 103
+    rez_value   go to state 104
 
 
 state 73
+
+   46 func_stmt: ALG atomic_type identifier . ENDL NACH ENDL stmt_list KON ENDL
+   47          | ALG atomic_type identifier . '(' param_list ')' ENDL NACH stmt_list KON ENDL
+
+    ENDL  shift, and go to state 105
+    '('   shift, and go to state 106
+
+
+state 74
 
    74 read: VVOD expr_list ENDL .
 
     $default  reduce using rule 74 (read)
 
 
-state 74
+state 75
 
    73 print: VYVOD expr_list ENDL .
 
     $default  reduce using rule 73 (print)
 
 
-state 75
+state 76
 
    21 expr: expr . ASSMNT expr
    22     | expr . PLUS expr
@@ -1202,9 +1209,8 @@ state 75
    30     | expr . LTEQ expr
    31     | expr . NEQ expr
    32     | expr . EQ expr
-   52 znach_value: ZNACH ASSMNT expr . ENDL
+   52 znach_value: ZNACH ASSMNT expr .
 
-    ENDL    shift, and go to state 106
     ASSMNT  shift, and go to state 50
     EQ      shift, and go to state 51
     NEQ     shift, and go to state 52
@@ -1218,15 +1224,17 @@ state 75
     MUL     shift, and go to state 60
     POW     shift, and go to state 61
 
+    $default  reduce using rule 52 (znach_value)
 
-state 76
+
+state 77
 
    15 expr: '(' expr ')' .
 
     $default  reduce using rule 15 (expr)
 
 
-state 77
+state 78
 
    21 expr: expr . ASSMNT expr
    21     | expr ASSMNT expr .
@@ -1258,7 +1266,7 @@ state 77
     $default  reduce using rule 21 (expr)
 
 
-state 78
+state 79
 
    21 expr: expr . ASSMNT expr
    22     | expr . PLUS expr
@@ -1283,7 +1291,7 @@ state 78
     $default  reduce using rule 32 (expr)
 
 
-state 79
+state 80
 
    21 expr: expr . ASSMNT expr
    22     | expr . PLUS expr
@@ -1308,7 +1316,7 @@ state 79
     $default  reduce using rule 31 (expr)
 
 
-state 80
+state 81
 
    21 expr: expr . ASSMNT expr
    22     | expr . PLUS expr
@@ -1333,7 +1341,7 @@ state 80
     $default  reduce using rule 30 (expr)
 
 
-state 81
+state 82
 
    21 expr: expr . ASSMNT expr
    22     | expr . PLUS expr
@@ -1358,7 +1366,7 @@ state 81
     $default  reduce using rule 29 (expr)
 
 
-state 82
+state 83
 
    21 expr: expr . ASSMNT expr
    22     | expr . PLUS expr
@@ -1383,7 +1391,7 @@ state 82
     $default  reduce using rule 28 (expr)
 
 
-state 83
+state 84
 
    21 expr: expr . ASSMNT expr
    22     | expr . PLUS expr
@@ -1408,7 +1416,7 @@ state 83
     $default  reduce using rule 27 (expr)
 
 
-state 84
+state 85
 
    21 expr: expr . ASSMNT expr
    22     | expr . PLUS expr
@@ -1431,7 +1439,7 @@ state 84
     $default  reduce using rule 23 (expr)
 
 
-state 85
+state 86
 
    21 expr: expr . ASSMNT expr
    22     | expr . PLUS expr
@@ -1454,7 +1462,7 @@ state 85
     $default  reduce using rule 22 (expr)
 
 
-state 86
+state 87
 
    21 expr: expr . ASSMNT expr
    22     | expr . PLUS expr
@@ -1475,7 +1483,7 @@ state 86
     $default  reduce using rule 25 (expr)
 
 
-state 87
+state 88
 
    21 expr: expr . ASSMNT expr
    22     | expr . PLUS expr
@@ -1496,7 +1504,7 @@ state 87
     $default  reduce using rule 24 (expr)
 
 
-state 88
+state 89
 
    21 expr: expr . ASSMNT expr
    22     | expr . PLUS expr
@@ -1515,7 +1523,7 @@ state 88
     $default  reduce using rule 26 (expr)
 
 
-state 89
+state 90
 
    21 expr: expr . ASSMNT expr
    22     | expr . PLUS expr
@@ -1547,7 +1555,7 @@ state 89
     $default  reduce using rule 38 (expr_list)
 
 
-state 90
+state 91
 
    13 expr: identifier '[' expr_list . ']'
    38 expr_list: expr_list . ',' expr
@@ -1556,7 +1564,7 @@ state 90
     ','  shift, and go to state 63
 
 
-state 91
+state 92
 
    36 function_call: identifier '(' expr_list . ')'
    38 expr_list: expr_list . ',' expr
@@ -1565,7 +1573,7 @@ state 91
     ','  shift, and go to state 63
 
 
-state 92
+state 93
 
    44 enum_array_identifier_list: identifier '[' . dimensions ']'
 
@@ -1574,14 +1582,14 @@ state 92
     dimensions  go to state 110
 
 
-state 93
+state 94
 
    41 decl: array_type enum_array_identifier_list ENDL .
 
     $default  reduce using rule 41 (decl)
 
 
-state 94
+state 95
 
    45 enum_array_identifier_list: enum_array_identifier_list ',' . identifier '[' dimensions ']'
 
@@ -1590,14 +1598,14 @@ state 94
     identifier  go to state 111
 
 
-state 95
+state 96
 
    40 decl: atomic_type enum_atomic_identifier_list ENDL .
 
     $default  reduce using rule 40 (decl)
 
 
-state 96
+state 97
 
    43 enum_atomic_identifier_list: enum_atomic_identifier_list ',' . identifier
 
@@ -1606,14 +1614,14 @@ state 96
     identifier  go to state 112
 
 
-state 97
+state 98
 
    48 proc_stmt: ALG identifier ENDL NACH . ENDL stmt_list KON ENDL
 
     ENDL  shift, and go to state 113
 
 
-state 98
+state 99
 
    55 arg_value: ARG . atomic_type enum_atomic_identifier_list
    56          | ARG . array_type enum_array_identifier_list
@@ -1633,7 +1641,7 @@ state 98
     atomic_type  go to state 115
 
 
-state 99
+state 100
 
    57 rez_value: REZ . array_type enum_array_identifier_list
    58          | REZ . atomic_type enum_atomic_identifier_list
@@ -1653,7 +1661,7 @@ state 99
     atomic_type  go to state 117
 
 
-state 100
+state 101
 
    49 proc_stmt: ALG identifier '(' param_list . ')' ENDL NACH ENDL stmt_list KON ENDL
    51 param_list: param_list . ';' param
@@ -1662,52 +1670,45 @@ state 100
     ';'  shift, and go to state 119
 
 
-state 101
+state 102
 
    50 param_list: param .
 
     $default  reduce using rule 50 (param_list)
 
 
-state 102
+state 103
 
    53 param: arg_value .
 
     $default  reduce using rule 53 (param)
 
 
-state 103
+state 104
 
    54 param: rez_value .
 
     $default  reduce using rule 54 (param)
 
 
-state 104
+state 105
 
    46 func_stmt: ALG atomic_type identifier ENDL . NACH ENDL stmt_list KON ENDL
 
     NACH  shift, and go to state 120
 
 
-state 105
+state 106
 
    47 func_stmt: ALG atomic_type identifier '(' . param_list ')' ENDL NACH stmt_list KON ENDL
 
-    ARG  shift, and go to state 98
-    REZ  shift, and go to state 99
+    ARG  shift, and go to state 99
+    REZ  shift, and go to state 100
 
     param_list  go to state 121
-    param       go to state 101
-    arg_value   go to state 102
-    rez_value   go to state 103
-
-
-state 106
-
-   52 znach_value: ZNACH ASSMNT expr ENDL .
-
-    $default  reduce using rule 52 (znach_value)
+    param       go to state 102
+    arg_value   go to state 103
+    rez_value   go to state 104
 
 
 state 107
@@ -1808,7 +1809,7 @@ state 114
 
     ID  shift, and go to state 6
 
-    identifier                  go to state 66
+    identifier                  go to state 67
     enum_array_identifier_list  go to state 127
 
 
@@ -1818,7 +1819,7 @@ state 115
 
     ID  shift, and go to state 6
 
-    identifier                   go to state 68
+    identifier                   go to state 69
     enum_atomic_identifier_list  go to state 128
 
 
@@ -1828,7 +1829,7 @@ state 116
 
     ID  shift, and go to state 6
 
-    identifier                  go to state 66
+    identifier                  go to state 67
     enum_array_identifier_list  go to state 129
 
 
@@ -1838,7 +1839,7 @@ state 117
 
     ID  shift, and go to state 6
 
-    identifier                   go to state 68
+    identifier                   go to state 69
     enum_atomic_identifier_list  go to state 130
 
 
@@ -1853,12 +1854,12 @@ state 119
 
    51 param_list: param_list ';' . param
 
-    ARG  shift, and go to state 98
-    REZ  shift, and go to state 99
+    ARG  shift, and go to state 99
+    REZ  shift, and go to state 100
 
     param      go to state 132
-    arg_value  go to state 102
-    rez_value  go to state 103
+    arg_value  go to state 103
+    rez_value  go to state 104
 
 
 state 120
@@ -1964,7 +1965,7 @@ state 127
    45 enum_array_identifier_list: enum_array_identifier_list . ',' identifier '[' dimensions ']'
    56 arg_value: ARG array_type enum_array_identifier_list .
 
-    ','  shift, and go to state 94
+    ','  shift, and go to state 95
 
     $default  reduce using rule 56 (arg_value)
 
@@ -1974,7 +1975,7 @@ state 128
    43 enum_atomic_identifier_list: enum_atomic_identifier_list . ',' identifier
    55 arg_value: ARG atomic_type enum_atomic_identifier_list .
 
-    ','  shift, and go to state 96
+    ','  shift, and go to state 97
 
     $default  reduce using rule 55 (arg_value)
 
@@ -1984,7 +1985,7 @@ state 129
    45 enum_array_identifier_list: enum_array_identifier_list . ',' identifier '[' dimensions ']'
    57 rez_value: REZ array_type enum_array_identifier_list .
 
-    ','  shift, and go to state 94
+    ','  shift, and go to state 95
 
     $default  reduce using rule 57 (rez_value)
 
@@ -1994,7 +1995,7 @@ state 130
    43 enum_atomic_identifier_list: enum_atomic_identifier_list . ',' identifier
    58 rez_value: REZ atomic_type enum_atomic_identifier_list .
 
-    ','  shift, and go to state 96
+    ','  shift, and go to state 97
 
     $default  reduce using rule 58 (rez_value)
 

@@ -171,4 +171,8 @@ public class Graph {
 
 
     }
+    
+    public void removeByVirginName(String str){
+        m_nodes.remove(getByVertexName(str));
+    }
 }

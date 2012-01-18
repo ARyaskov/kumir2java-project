@@ -3,7 +3,7 @@ package semantic;
 import java.io.*;
 import java.util.ArrayList;
 
-
+import java.util.regex.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -390,7 +390,10 @@ public class Semantic {
         if (!isExits) {
             Vertex vx_out = getByVertexName(vx, "create_ident");
             String get = vx_out.getChildList().get(0).getAttribute("NAME");
-            System.err.printf("Error: Отсутствует ЗНАЧ в функции <%s>\n", get);
+            String mesg = String.format("Отсутствует ЗНАЧ в функции <%s>", get);
+            String errorMesg = makeErrorMessage(filename, -1, mesg);
+
+            System.err.printf(errorMesg);
 
 
         }
@@ -517,6 +520,12 @@ public class Semantic {
 
     }
 
+    public static HashMap<String, String> semanticWork_acquireParamsFP(Vertex in_vx) {
+        ArrayList<Vertex> list = new ArrayList();
+        HashMap<String, String> tempLocals = new HashMap();
+        return tempLocals;
+    }
+
     /*
      * Получает объявления в Function или в Procedure
      */
@@ -566,6 +575,9 @@ public class Semantic {
             }
 
         }
+
+
+        //Теперь собираем из параметров
 
 
         return tempLocals;
@@ -625,18 +637,42 @@ public class Semantic {
         Iterator it = listIdents.iterator();
         while (it.hasNext()) {
             Vertex vx = (Vertex) it.next();
-            String var_name = vx.getAttribute("NAME");
-            String var_id = vx.getAttribute("ID");
+            String var_name = vx.getChildList().get(0).getAttribute("NAME");
+            String var_id = vx.getChildList().get(0).getAttribute("ID");
 
 
 
-            if (hash.containsKey(var_name)) {// Переменная объявлена, теперь узнаем до использования ли
-            } else {
-                tempList.add(vx);
+            if (fpTable.isIdentifierExists(var_name) != true
+                    && vx.getParentList().get(0).getAttribute("NAME").equals("create_enum_atomic_identifier_list") != true
+                    && vx.getParentList().get(0).getAttribute("NAME").equals("append_enum_atomic_identifier_list") != true) {
+                if (hash.containsKey(var_name)) {// Переменная объявлена, теперь узнаем до использования ли
+                } else {
+                    tempList.add(vx.getChildList().get(0));
+                }
             }
         }
 
         return tempList;
+    }
+
+    public static Integer location_after(String in_what, String in_afterWhat) {
+        Integer result = null;
+        ArrayList<Integer> twhat = multipleLocations.get(in_what);
+        ArrayList<Integer> temp = new ArrayList();
+        ArrayList<Integer> tafterWhat = multipleLocations.get(in_afterWhat);
+        Integer aft = locations.get(in_afterWhat);
+        Iterator it = twhat.iterator();
+        while (it.hasNext()) {
+            Integer inte = (Integer) it.next();
+            if (inte.intValue() >= aft.intValue()) {
+                result = inte;
+                break;
+            }
+        }
+
+
+
+        return result;
     }
 
     public static void semanticWork_checkFP() {
@@ -661,11 +697,20 @@ public class Semantic {
                     String str = vxNow2.getAttribute("NAME");
                     if (inChildsExistsAttName(vxNow, str) == false) {
                         Vertex temp = findPureNameInChilds(vxNow, "create_ident");
-                        System.err.printf("Error: необъявленные переменные в теле функции!"
-                                + " Ошибка в функции <%s>\n", temp.getChildList().get(0).getAttribute("NAME"));
 
+                        String errMess = String.format("Необъявленная переменная <%s> в теле функции!"
+                                + " Ошибка в функции <%s>", vxNow2.getAttribute("NAME"), temp.getChildList().get(0).getAttribute("NAME"));
+
+
+                        Integer inte = location_after(vxNow2.getParentList().get(0).getVirginName(), temp.getChildList().get(0).getAttribute("NAME"));
+                        if (inte == null) {
+                            inte = locations.get(vxNow2.getParentList().get(0).getVirginName());
+                        }
+                        errMess = makeErrorMessage(filename, inte, errMess);
+
+                        System.err.print(errMess);
                         isFail = true;
-                        break;
+
                     }
                 }
 
@@ -694,9 +739,7 @@ public class Semantic {
              */
         }
 
-        if (isFail) {
-            System.exit(1);
-        }
+
     }
 
     /*
@@ -885,8 +928,8 @@ public class Semantic {
             ArrayList<Object> listTypes;
             Iterator childIter = vxNow.getChildList().iterator();
             while (childIter.hasNext()) {
-                Vertex vxCh = (Vertex)childIter.next();
-                if (vxCh.getAttribute("TYPE").equals("цел")==false) {
+                Vertex vxCh = (Vertex) childIter.next();
+                if (vxCh.getAttribute("TYPE").equals("цел") == false) {
                     Integer loc = locations.get(vxNow.getVirginName());
                     String erMess = "Ошибка C0002:  Индексы массива должны быть целыми числами!";
                     Vertex result = new Vertex();
@@ -969,9 +1012,21 @@ public class Semantic {
     }
 
     public static String getRetVal(Vertex vx) {
-        String result;
+        String result = null;
 
         result = findPureNameInChilds(vx, "create_atomic_type").getChildList().get(0).getAttribute("NAME");
+
+        if (result.equals("цел") == true) {
+            result = "I";
+        } else if (result.equals("сим")) {
+            result = "C";
+        } else if (result.equals("лог")) {
+            result = "Z";
+        } else if (result.equals("лит")) {
+            result = "Ljava/lang/String;";
+        } else {
+            result = "V";
+        }
 
         return result;
     }
@@ -988,17 +1043,38 @@ public class Semantic {
 
             int constsTableID = findConstTableID(vx);
             String name = findPureNameInChilds(vx, "create_ident").getChildList().get(0).getAttribute("NAME");
-            constsTableID = constantsTable.getRowByName(name).getID();
+            // constsTableID = constantsTable.getRowByName(name).getID();
+
+            /*
+             * Заполняем NameAndType - сначала Name, кладем, потом дескриптор,
+             * кладем, потом NameAndType,кладем и так получаем ID NameAndType в
+             * таблицу функций
+             */
+            ConstantsTableRow CTRowName = new ConstantsTableRow(new ArrayList(), "UTF-8", name);
+            constantsTable.addRow(CTRowName);
+
+            getParameterList(vx, plist);
+
+            String desc = FPTableRow.makeDescriptor(plist, "V");
+            ConstantsTableRow CTRowType = new ConstantsTableRow(new ArrayList(), "UTF-8", desc);
+            constantsTable.addRow(CTRowType);
+            String nameAndTypeContain = CTRowName.getID() + "," + CTRowType.getID();
+            ConstantsTableRow CTRowNameAndType = new ConstantsTableRow(new ArrayList(), "NameAndType", nameAndTypeContain);
+            constantsTable.addRow(CTRowNameAndType);
+            constsTableID = CTRowNameAndType.getID();
             if (findPureNameInChilds(vx, "create_ident") == null) {
                 countPar = 0;
                 fprow = new FPTableRow(constsTableID, name, null, 0, null);
             } else {
-                getParameterList(vx, plist);
-                retVal = getRetVal(vx);
-                fprow = new FPTableRow(constsTableID, name, retVal, plist.size(), plist);
+
+
+                fprow = new FPTableRow(constsTableID, name, null, plist.size(), plist);
 
             }
+            // Занесем имя функции в таблицу констант
+
             fpTable.add(fprow);
+
             plist = new ArrayList();
 
         }
@@ -1015,17 +1091,39 @@ public class Semantic {
 
             int constsTableID = findConstTableID(vx);
             String name = findPureNameInChilds(vx, "create_ident").getChildList().get(0).getAttribute("NAME");
-            constsTableID = constantsTable.getRowByName(name).getID();
+            // constsTableID = constantsTable.getRowByName(name).getID();
+
+            /*
+             * Заполняем NameAndType - сначала Name, кладем, потом дескриптор,
+             * кладем, потом NameAndType,кладем и так получаем ID NameAndType в
+             * таблицу функций
+             */
+            Integer inte = locations.get(name);
+
+            ConstantsTableRow CTRowName = new ConstantsTableRow(inte.intValue(), "UTF-8", name);
+            constantsTable.addRow(CTRowName);
+
+            getParameterList(vx, plist);
+            retVal = getRetVal(vx);
+
+            String desc = FPTableRow.makeDescriptor(plist, retVal);
+            ConstantsTableRow CTRowType = new ConstantsTableRow(inte.intValue(), "UTF-8", desc);
+            constantsTable.addRow(CTRowType);
+            String nameAndTypeContain = CTRowName.getID() + "," + CTRowType.getID();
+            ConstantsTableRow CTRowNameAndType = new ConstantsTableRow(new ArrayList(), "NameAndType", nameAndTypeContain);
+            constantsTable.addRow(CTRowNameAndType);
+            constsTableID = CTRowNameAndType.getID();
             if (findPureNameInChilds(vx, "create_ident") == null) {
                 countPar = 0;
-                fprow = new FPTableRow(constsTableID, name, null, 0, null);
+                fprow = new FPTableRow(constsTableID, name, retVal, 0, null);
             } else {
-                getParameterList(vx, plist);
-                retVal = getRetVal(vx);
                 fprow = new FPTableRow(constsTableID, name, retVal, plist.size(), plist);
 
             }
+            // Занесем имя функции в таблицу констант
+
             fpTable.add(fprow);
+
             plist = new ArrayList();
 
         }
@@ -1062,10 +1160,10 @@ public class Semantic {
     }
 
     public static void fillLocalsTable() {
-
+// Сделать для процедур
         ArrayList<Vertex> list = new ArrayList();
-        HashMap<String, String> decls = new HashMap();
-
+        decls = new HashMap();
+        HashMap<String, String> params = new HashMap();
         // функции decls = new HashMap(); list = new ArrayList(); it =
 
         int identCount = 0;
@@ -1085,6 +1183,7 @@ public class Semantic {
             }
             tempVx = tempVx.getParentList().get(0);
             decls = semanticWork_acquireDeclsFP(tempVx);
+            params = semanticWork_acquireParamsFP(tempVx);
             curFuncID = curFun.getID();
             Iterator it2 = decls.keySet().iterator();
             while (it2.hasNext()) {
@@ -1094,11 +1193,12 @@ public class Semantic {
                 Iterator it3 = multipleLocations.keySet().iterator();
                 ArrayList<Integer> tempLocs = new ArrayList();
                 while (it3.hasNext()) {
-                    /*String str = (String) it3.next();
-                    System.out.print(str);
-                    System.out.print("-");
-                    System.out.print(multipleLocations.get(str));
-                    System.out.print("\n");*/
+                    /*
+                     * String str = (String) it3.next(); System.out.print(str);
+                     * System.out.print("-");
+                     * System.out.print(multipleLocations.get(str));
+                     * System.out.print("\n");
+                     */
                     // System.out.printf("%s\n",curFun.getName());
                     String temp = (String) it3.next();
 
@@ -1130,19 +1230,83 @@ public class Semantic {
 
     }
 
+    public static boolean isNumeric(String aStringValue) {
+        Pattern pattern = Pattern.compile("\\d+");
+
+        Matcher matcher = pattern.matcher(aStringValue);
+        return matcher.matches();
+    }
+
+    public static String findClassName(String methodRef) {
+        String result;
+        result = "1";
+
+        return result;
+
+    }
+
+    public static String findNameAndType(String methodRef) {
+        String result = null;
+
+        Vertex vx = g.getVertexByVirginName(methodRef);
+        String name = vx.getChildList().get(0).getChildList().get(0).getAttribute("NAME");
+        FPTableRow fpr = fpTable.getRowByName(name);
+        if (fpr != null) {
+            result = String.valueOf(fpr.getID());
+        }
+        return result;
+
+    }
+
     public static void fillConstantsTable() {
         ConstantsTableRow row;
         row = new ConstantsTableRow(new ArrayList(), "UTF-8", "Code");
         constantsTable.addRow(row);
+        row = new ConstantsTableRow(new ArrayList(), "UTF-8", "<init>");
+        constantsTable.addRow(row);
+        row = new ConstantsTableRow(new ArrayList(), "UTF-8", "MainClass");
+        constantsTable.addRow(row);
+        row = new ConstantsTableRow(new ArrayList(), "Class", ConstantsTableRow.m_constantIDCount - 1);
+        constantsTable.addRow(row);
+
+
         Iterator it = multipleLocations.keySet().iterator();
         while (it.hasNext()) {
             String str = (String) it.next();
 
             if (str.indexOf("!") == -1) {
-                String type = "UTF-8";
-                ArrayList<Integer> locs = multipleLocations.get(str);
-                String value = str;
-                row = new ConstantsTableRow(locs, type, value);
+
+                if (isNumeric(str) == true) {
+                    int parsed = Integer.parseInt(str, 10);
+                    if (parsed < -32768 || parsed > 32767) {
+                        String type = "INT";
+                        ArrayList<Integer> locs = multipleLocations.get(str);
+                        String value = str;
+                        row = new ConstantsTableRow(locs, type, value);
+                        constantsTable.addRow(row);
+                    }
+                } else if (isNumeric(str) == true) {
+                    int parsed = Integer.parseInt(str, 10);
+                    if (parsed != 0 && parsed >= -32768 && parsed <= 32767) {
+                    }
+                    // пропуск - переменные не обязательно вносить в список
+                } else {
+                    String type = "UTF-8";
+                    ArrayList<Integer> locs = multipleLocations.get(str);
+                    String value = str;
+                    row = new ConstantsTableRow(locs, type, value);
+                    constantsTable.addRow(row);
+                }
+            } else if (str.indexOf("create_function_call") != -1
+                    && str.indexOf("create_function_call_expr") == -1) {
+                String type = "MethodRef";
+                Integer loc = locations.get(str);
+
+                String className = findClassName(str);
+                String nameAndType = findNameAndType(str);
+
+                String value = className + "," + nameAndType;
+                row = new ConstantsTableRow(loc.intValue(), type, value);
                 constantsTable.addRow(row);
             }
         }
@@ -1161,21 +1325,25 @@ public class Semantic {
             Vertex create_expr_list = findPureNameInChilds(vx, "create_expr_list");
             int parCount = create_expr_list.getChildList().size();
 
-            if (parCount > fpTable.getRowByName(name).getParCount()) {
-                String errMess = "Количество параметров у \"" + name + "\"" + " больше, чем сказано в определении";
-                Integer loc = locations.get(vx.getVirginName());
-                String err = makeErrorMessage(filename, loc, errMess);
-                System.err.print(err);
-                allRight = false;
-            } else if (parCount < fpTable.getRowByName(name).getParCount()) {
-                String errMess = "Количество параметров у \"" + name + "\"" + " меньше, чем сказано в определении";
-                Integer loc = locations.get(vx.getVirginName());
-                String err = makeErrorMessage(filename, loc, errMess);
-                System.err.print(err);
-                allRight = false;
+            if (fpTable.getSize() > 0) {
+
+                FPTableRow nowRow = fpTable.getRowByName(name);
+                
+                if (nowRow!=null && parCount > nowRow.getParCount()) {
+                    String errMess = "Количество параметров у \"" + name + "\"" + " больше, чем сказано в определении";
+                    Integer loc = locations.get(vx.getVirginName());
+                    String err = makeErrorMessage(filename, loc, errMess);
+                    System.err.print(err);
+                    allRight = false;
+                } else if (nowRow!=null && parCount < nowRow.getParCount()) {
+                    String errMess = "Количество параметров у \"" + name + "\"" + " меньше, чем сказано в определении";
+                    Integer loc = locations.get(vx.getVirginName());
+                    String err = makeErrorMessage(filename, loc, errMess);
+                    System.err.print(err);
+                    allRight = false;
+                }
+
             }
-
-
         }
     }
 
@@ -1201,41 +1369,86 @@ public class Semantic {
     }
 
     public static void semanticWork_checkParamTypesMatch() {
-        ArrayList<Vertex> list = new ArrayList();
-        findPureNameInChilds2List(g.getRoot(), "create_function_call", list);
-        Iterator it = list.iterator();
-        while (it.hasNext()) {
-            String name = null;
-            ArrayList<String> listTypes = new ArrayList();
-            Vertex vx = (Vertex) it.next();
-            Vertex createIdVer = findPureNameInChilds(vx, "create_ident");
-            name = createIdVer.getChildList().get(0).getAttribute("NAME");
-            ArrayList<Vertex> tempList = new ArrayList();
-            Vertex create_expr_list = findPureNameInChilds(vx, "create_expr_list");
-            Iterator it2 = create_expr_list.getChildList().iterator();
-            while (it2.hasNext()) {
-                Vertex vx2 = (Vertex) it2.next();
-                String type = vx2.getAttribute("TYPE");
-                if (type == null) {
-                    type = vx2.getChildList().get(0).getAttribute("TYPE");
+        if (fpTable.getSize() > 0) {
+            ArrayList<Vertex> list = new ArrayList();
+            findPureNameInChilds2List(g.getRoot(), "create_function_call", list);
+            Iterator it = list.iterator();
+            while (it.hasNext()) {
+                String name = null;
+                ArrayList<String> listTypes = new ArrayList();
+                Vertex vx = (Vertex) it.next();
+                Vertex createIdVer = findPureNameInChilds(vx, "create_ident");
+                name = createIdVer.getChildList().get(0).getAttribute("NAME");
+                ArrayList<Vertex> tempList = new ArrayList();
+                Vertex create_expr_list = findPureNameInChilds(vx, "create_expr_list");
+                Iterator it2 = create_expr_list.getChildList().iterator();
+                while (it2.hasNext()) {
+                    Vertex vx2 = (Vertex) it2.next();
+                    String type = vx2.getAttribute("TYPE");
+                    if (type == null) {
+                        type = vx2.getChildList().get(0).getAttribute("TYPE");
+                    }
+
+                    listTypes.add(type);
+
+
+                }
+                FPTableRow nowRow = fpTable.getRowByName(name);
+                if (nowRow!=null && listTypes.containsAll(nowRow.getParTypes()) == false) {
+                    String errMess = "Вызов функции/процедуры \"" + name + "\" не соответствует определению по типам параметров";
+                    Integer loc = locations.get(vx.getVirginName());
+                    String err = makeErrorMessage(filename, loc, errMess);
+                    System.err.print(err);
+                    allRight = false;
+
                 }
 
-                listTypes.add(type);
 
 
             }
-            if (listTypes.containsAll(fpTable.getRowByName(name).getParTypes()) == false) {
-                String errMess = "Вызов функции/процедуры \"" + name + "\" не соответствует определению по типам параметров";
-                Integer loc = locations.get(vx.getVirginName());
-                String err = makeErrorMessage(filename, loc, errMess);
-                System.err.print(err);
-                allRight = false;
-
-            }
-
-
-
         }
+    }
+
+    public static void transformTree() {
+        // Трансформируем дерево - приводим узлы := к виду []:=
+        ArrayList<Vertex> tempList = new ArrayList();
+        Iterator it = g.getIterator();
+        while (it.hasNext()) {
+            Vertex vx = (Vertex) it.next();
+            if (vx.getAttribute("NAME").equals("create_array_expr")
+                    && vx.getParentList().get(0).getAttribute("NAME").equals(":=")) {
+                tempList.add(vx);
+            }
+        }
+
+        // когда всё пройдено приступаем к обработке каждого
+        Iterator it2 = tempList.iterator();
+        while (it2.hasNext()) {
+            Vertex vx = (Vertex) it2.next();
+            // скопируем детей []
+            ArrayList<Vertex> childs = vx.getChildList();
+            // скопируем родителя
+            Vertex parent = vx.getParentList().get(0);
+            // удалим []
+            g.removeByVirginName(vx.getVirginName());
+            //Переименуем := в []:= 
+            String newName = "[]" + parent.getAttribute("NAME");
+            parent.addAttribute("NAME", newName);
+            // присвоим детей [] списку детей :=, притом первыми
+
+            // запасной массив
+            ArrayList<Vertex> temp = parent.getChildList();
+            parent.getChildList().clear();
+
+            for (Vertex v : childs) {
+                parent.getChildList().add(v);
+            }
+            for (Vertex v : temp) {
+                parent.getChildList().add(v);
+            }
+            //вуаля
+        }
+
     }
 
     public static void init() {
@@ -1261,8 +1474,13 @@ public class Semantic {
         // sortIt();
         root = g.findRoot();
         semanticWorks_findFP();
-        fillConstantsTable();
+
+
         fillFPTable();
+
+
+        fillConstantsTable();
+
         fillLocalsTable();
 
     }
@@ -1272,7 +1490,9 @@ public class Semantic {
         semanticWork_checkCallingFunctionExists();
         semanticWork_checkParamCountMatch();
         semanticWork_checkParamTypesMatch();
-      //  semanticWorks_checkIntegerIndexes();
+
+
+        //  semanticWorks_checkIntegerIndexes();
 
     }
 
@@ -1280,14 +1500,20 @@ public class Semantic {
 
         init();
         checks();
-       System.out.print("Таблица констант:\n");
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Semantic.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        System.out.print("Таблица констант:\n");
         constantsTable.printTable();
         System.out.print("\nТаблица функций:\n");
         fpTable.printTable();
         System.out.print("\nТаблица локальных переменных:\n");
         localsTable.printTable();
 
-       // g.printInfo();
+        //transformTree();
+        // g.printInfo();
 
         /*
          * Iterator it = fpTable.getIterator(); while (it.hasNext()) {
@@ -1300,20 +1526,20 @@ public class Semantic {
         // constantsTable.printTable();
 
         //g.printInfo();
-        ArrayList<Vertex> list = new ArrayList();
-        semanticWork_findExprs(root, list);
-        semanticWorks_attributeIdentByType();
-        /*  if (procs != null && procs.size() > 0) {
-        semanticWork_isReturnExistsP(procs.get(0));
-        }
-        if (funcs != null && funcs.size() > 0) {
-        semanticWork_isReturnExistsF(funcs.get(0));
-        }*/
-        boolean bnkl2 = true;
+     /*
+         * ArrayList<Vertex> list = new ArrayList();
+         * semanticWork_findExprs(root, list);
+         * semanticWorks_attributeIdentByType(); /* if (procs != null &&
+         * procs.size() > 0) { semanticWork_isReturnExistsP(procs.get(0)); } if
+         * (funcs != null && funcs.size() > 0) {
+         * semanticWork_isReturnExistsF(funcs.get(0)); }
+         *
+         * boolean bnkl2 = true;
+         */
 
 
         if (allRight == true) {
-            System.err.print("\nСкомпилилось.");
+            // System.err.print("\nСкомпилилось.");
         }
 
 

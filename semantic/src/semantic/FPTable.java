@@ -54,5 +54,8 @@ public class FPTable {
         }
     }
 
+    public int getSize(){
+        return nodes.size();
+    }
 
 }

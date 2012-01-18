@@ -27,7 +27,7 @@ append_stmt_to_list!10 5
 индекс 5
 create_ident!11 5
 create_expr_id!12 5
- 5
+4 5
 :=!13 6
 :=!13 6
 create_expr_list!14 6
@@ -42,7 +42,7 @@ create_ident!19 6
 индекс 6
 create_ident!1a 6
 create_expr_id!1b 6
- 6
+2 6
 +!1c 6
 +!1c 6
 create_expr_list!1d 6

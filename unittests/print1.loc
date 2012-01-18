@@ -11,7 +11,7 @@ create_stmt_list!7 4
 перем1 4
 create_ident!8 4
 create_expr_id!9 4
- 4
+130 4
 :=!a 5
 :=!a 5
 create_expr_list!b 5

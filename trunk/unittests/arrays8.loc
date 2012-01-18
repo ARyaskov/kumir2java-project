@@ -15,7 +15,7 @@ create_stmt_list!9 4
 индекс1 4
 create_ident!a 4
 create_expr_id!b 4
- 4
+4 4
 :=!c 5
 :=!c 5
 create_expr_list!d 5

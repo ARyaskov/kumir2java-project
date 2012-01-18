@@ -29,7 +29,8 @@ public class ConstantsTable {
                 isValueExists(row.getValue()).addLocation(
                         (Integer) it.next());
             }
-
+            ConstantsTableRow.m_constantIDCount--;
+            row.setID(isValueExists(row.getValue()).getID());
         } else {
             rows.add(row);
         }

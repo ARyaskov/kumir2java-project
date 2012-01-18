@@ -11,7 +11,7 @@ import java.util.*;
 */
 public class ConstantsTableRow {
 
-    private static int m_constantIDCount = 0;
+    public static int m_constantIDCount = 1;
     /**
      * Статический счётчик для вычисления следующего ID
      */
@@ -40,7 +40,17 @@ public class ConstantsTableRow {
         m_locations = locs;
         m_typeOfConstant = type;
         m_value = value;
-        m_constantID = m_constantIDCount++;
+        m_constantID = m_constantIDCount;
+        m_constantIDCount++;
+    }
+    
+        public ConstantsTableRow(int loc, String type, Object value) {
+        m_locations = new ArrayList();
+        m_locations.add(Integer.valueOf(loc));
+        m_typeOfConstant = type;
+        m_value = value;
+        m_constantID = m_constantIDCount;
+        m_constantIDCount++;
     }
 
     /*
@@ -67,6 +77,9 @@ public class ConstantsTableRow {
      * Возвращает ID константы в таблице констант
      */
 
+          public void setID(int id) {
+        m_constantID = id;
+    }
     public int getID() {
         return m_constantID;
     }
@@ -104,11 +117,23 @@ public class ConstantsTableRow {
 
     public void printRow() {
         String numRows = "";
-        Iterator it = m_locations.iterator();
-        while (it.hasNext()) {
-            numRows += it.next() + ",";
+        Set set = new HashSet();
+
+
+        if (m_locations != null) {
+            Iterator it = m_locations.iterator();
+            while (it.hasNext()) {
+               Integer inte =(Integer) it.next();
+                numRows += inte.toString() + ",";
+                set.add(inte);
+            }
+            if (numRows.length()>0)
+                numRows = numRows.substring(0, numRows.length() - 1);
         }
-        numRows = numRows.substring(0, numRows.length() - 1);
+        
         System.out.printf("|%d|%s|%s|%s|\n", m_constantID, numRows, m_typeOfConstant, m_value.toString());
     }
+   
+    
+    
 }

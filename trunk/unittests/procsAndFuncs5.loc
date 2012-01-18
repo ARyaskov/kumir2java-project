@@ -33,12 +33,12 @@ append_param_to_list!13 1
 create_ident!14 3
 complex_fun 3
 create_ident!15 3
- 3
+1 3
 create_expr_list!16 3
- 3
+2 3
 create_expr_list!16 3
 append_expr_to_list!17 3
- 3
+3 3
 create_expr_list!16 3
 append_expr_to_list!18 3
 create_function_call!19 3

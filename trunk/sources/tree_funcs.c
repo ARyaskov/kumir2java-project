@@ -673,7 +673,7 @@ struct NExpr* create_const_expr (enum Const_type type, union Const_values value)
         expr->val.Int = value.Int;
 
         char buf[10]= {};
-        sscanf(buf, "%d", value.Int);
+        sprintf(buf, "%d", value.Int);
 
         fprintf(locsfile, buf);
         fprintf(locsfile," ");

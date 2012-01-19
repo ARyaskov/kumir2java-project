@@ -36,4 +36,11 @@ public class LocalsTableRow {
         numLocs = numLocs.substring(0, numLocs.length() - 1);
         System.out.printf("|%d|%s|%s|%s|%d|\n",m_id,numLocs,m_constantType, m_value.toString(), m_idFunc  );
     }
+    public ArrayList<Integer> getLocs(){
+        return m_locs;
+    }
+
+    public int getID(){
+        return m_id;
+    }
 }

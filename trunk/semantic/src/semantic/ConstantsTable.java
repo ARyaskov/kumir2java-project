@@ -128,4 +128,11 @@ public class ConstantsTable {
         }
         return result;
     }
+
+   public Iterator getIterator(){
+       return rows.iterator();
+   }
+
+
+
 }

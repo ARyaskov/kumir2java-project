@@ -520,6 +520,28 @@ public class Semantic {
 
     }
 
+    public static void findTypeInChilds2List(Vertex in_vx, String str_to_find, ArrayList<Vertex> list) {
+        Iterator it = in_vx.getChildList().iterator();
+        Vertex result = null;
+        Vertex vx = null;
+
+        while (it.hasNext()) {
+            vx = (Vertex) it.next();
+
+            if (vx.getAttribute("TYPE") == null) {
+            } else if (vx.getAttribute("TYPE").equals(str_to_find)) {
+                result = vx;
+                list.add(vx);
+
+            }
+            findPureNameInChilds2List(vx, str_to_find, list);
+
+
+        }
+
+
+    }
+
     public static HashMap<String, String> semanticWork_acquireParamsFP(Vertex in_vx) {
         ArrayList<Vertex> list = new ArrayList();
         HashMap<String, String> tempLocals = new HashMap();
@@ -576,8 +598,20 @@ public class Semantic {
 
         }
 
-
+        /*
         //Теперь собираем из параметров
+        ArrayList<Vertex> tempLst = new ArrayList();
+        ArrayList<Vertex> tempLst2 = new ArrayList();
+        Vertex vxNow2 = new Vertex();
+        findPureNameInChilds2List(in_vx, "create_from_arg_rezvalue", tempLst);
+
+        Iterator it3 = tempLst.iterator();
+        while (it3.hasNext()) {
+        Vertex vx3 = (Vertex) it3.next();
+        findTypeInChilds2List(vx3, "ID", tempLst2);
+        }*/
+
+
 
 
         return tempLocals;
@@ -585,9 +619,34 @@ public class Semantic {
 
     }
 
+    public static String getTypeOfIdentifier(Vertex in_vx) {
+        String result = null;
+
+
+        Iterator it = in_vx.getParentList().iterator();
+        while (it.hasNext()) {
+
+            Vertex vxNow = (Vertex) it.next();
+            if (vxNow.getAttribute("NAME").equals("create_rez") || vxNow.getAttribute("NAME").equals("create_arg")) {
+                result = vxNow.getChildList().get(0).getChildList().get(0).getAttribute("NAME");
+                break;
+            }
+            result = getTypeOfIdentifier(vxNow);
+        }
+
+
+        return result;
+    }
+
+    public static String getTypeOfIdentifierByName(String name) {
+        String result = null;
+
+        return result;
+    }
+
     public static ArrayList<Vertex> semanticWork_acquireIdents(Vertex in_vx, ArrayList<Vertex> list) {
         Iterator it = in_vx.getChildList().iterator();
-
+// Vertex vx1 = g.getVertexByVirginName(virginName);
         Vertex vx = null;
 
         while (it.hasNext()) {
@@ -640,8 +699,13 @@ public class Semantic {
             String var_name = vx.getChildList().get(0).getAttribute("NAME");
             String var_id = vx.getChildList().get(0).getAttribute("ID");
 
-
-
+            String tmpType = getTypeOfIdentifier(vx);
+            String tmptmp = vx.getVirginName();
+            String tmp1;
+            if (tmpType != null) {
+                tmp1 = vx.getChildList().get(0).getAttribute("NAME");
+                hash.put(tmp1, tmpType);
+            }
             if (fpTable.isIdentifierExists(var_name) != true
                     && vx.getParentList().get(0).getAttribute("NAME").equals("create_enum_atomic_identifier_list") != true
                     && vx.getParentList().get(0).getAttribute("NAME").equals("append_enum_atomic_identifier_list") != true) {
@@ -651,6 +715,11 @@ public class Semantic {
                 }
             }
         }
+
+
+
+
+
 
         return tempList;
     }
@@ -1328,14 +1397,14 @@ public class Semantic {
             if (fpTable.getSize() > 0) {
 
                 FPTableRow nowRow = fpTable.getRowByName(name);
-                
-                if (nowRow!=null && parCount > nowRow.getParCount()) {
+
+                if (nowRow != null && parCount > nowRow.getParCount()) {
                     String errMess = "Количество параметров у \"" + name + "\"" + " больше, чем сказано в определении";
                     Integer loc = locations.get(vx.getVirginName());
                     String err = makeErrorMessage(filename, loc, errMess);
                     System.err.print(err);
                     allRight = false;
-                } else if (nowRow!=null && parCount < nowRow.getParCount()) {
+                } else if (nowRow != null && parCount < nowRow.getParCount()) {
                     String errMess = "Количество параметров у \"" + name + "\"" + " меньше, чем сказано в определении";
                     Integer loc = locations.get(vx.getVirginName());
                     String err = makeErrorMessage(filename, loc, errMess);
@@ -1394,7 +1463,7 @@ public class Semantic {
 
                 }
                 FPTableRow nowRow = fpTable.getRowByName(name);
-                if (nowRow!=null && listTypes.containsAll(nowRow.getParTypes()) == false) {
+                if (nowRow != null && listTypes.containsAll(nowRow.getParTypes()) == false) {
                     String errMess = "Вызов функции/процедуры \"" + name + "\" не соответствует определению по типам параметров";
                     Integer loc = locations.get(vx.getVirginName());
                     String err = makeErrorMessage(filename, loc, errMess);
@@ -1451,6 +1520,58 @@ public class Semantic {
 
     }
 
+    public static void cutLocalsFromConstants() {
+        Iterator it = localsTable.getIterator();
+        while (it.hasNext()) {
+            LocalsTableRow row = (LocalsTableRow) it.next();
+            ArrayList<Integer> tmpList = row.getLocs();
+            Iterator it2 = constantsTable.getIterator();
+            while (it2.hasNext()) {
+                ConstantsTableRow row2 = (ConstantsTableRow) it2.next();
+                ArrayList<Integer> tmptmp = row2.getLocation();
+                if (tmptmp.containsAll(tmpList)) {
+                    System.out.printf("Константа %d в таблице констант - локальная переменная %d\n",
+                            row2.getID(), row.getID());
+                }
+                /////
+            }
+
+        }
+    }
+
+    public static void processParamListOnTables() {
+        Iterator it = fpTable.getIterator();
+        String resultName = null;
+        while (it.hasNext()) {
+            FPTableRow row = (FPTableRow) it.next();
+            Integer addressNameAndType = row.getConstTableID();
+            ConstantsTableRow crow = constantsTable.getRowById(addressNameAndType);
+            Integer locOfDecriptor = Integer.valueOf(((String) crow.getValue()).split(",")[1].trim());
+            Integer locOfName = Integer.valueOf(((String) crow.getValue()).split(",")[0].trim());
+            Integer result = constantsTable.getRowById(locOfDecriptor).getLocation().get(0);
+            resultName = constantsTable.getRowById(locOfName).getValue().toString();
+
+            Iterator it2 = constantsTable.getIterator();
+            while (it2.hasNext()) {
+                ConstantsTableRow row2 = (ConstantsTableRow) it2.next();
+                if (row2.getLocation().size() > 0) {
+                    if (row2.getID() != result && row2.getLocation().get(0).equals(result)) {
+                        //TODO - проитерировать для всех местоположений
+                        ArrayList<Integer> tmpLocals = new ArrayList();
+                        tmpLocals.add(row2.getLocation().get(0));
+                        LocalsTableRow tmpRow = new LocalsTableRow(tmpLocals,
+                                "UTF-8",
+                                row2.getValue(),
+                                fpTable.getRowByName(resultName).getID(),
+                                false);
+                        localsTable.add(tmpRow);
+                    }
+                }
+            }
+
+        }
+    }
+
     public static void init() {
         g = new Graph();
         locals = new HashMap();
@@ -1461,6 +1582,7 @@ public class Semantic {
         decls = new HashMap();
         constantsTable = new ConstantsTable();
         fpTable = new FPTable();
+        //  filename = "..\\unittests\\procsAndFuncs1.dot";
         filename = "..\\unittests\\procsAndFuncs1.dot";
         filenameLoc = filename.substring(0, filename.length() - 4).concat(".loc");
         filenameKum = filename.substring(0, filename.length() - 4).concat(".kum");
@@ -1500,6 +1622,10 @@ public class Semantic {
 
         init();
         checks();
+      // >>   cutLocalsFromConstants();
+        
+        // >> processParamListOnTables();
+        
         try {
             Thread.sleep(100);
         } catch (InterruptedException ex) {

@@ -35,4 +35,8 @@ public class LocalsTable {
             ((LocalsTableRow)it.next()).print();
         }
     }
+
+    public Iterator getIterator(){
+        return nodes.iterator();
+    }
 }

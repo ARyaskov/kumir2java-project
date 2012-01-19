@@ -111,7 +111,7 @@ public class FPTableRow {
         return m_parTypes;
     }
 
-    public int getConstTable() {
+    public int getConstTableID() {
         return m_constTableID;
     }
 

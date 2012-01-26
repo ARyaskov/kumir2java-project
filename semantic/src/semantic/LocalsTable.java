@@ -28,15 +28,27 @@ public class LocalsTable {
         return result;
     }
 
-
-    public void printTable(){
+    public void printTable() {
         Iterator it = nodes.iterator();
-        while(it.hasNext()){
-            ((LocalsTableRow)it.next()).print();
+        while (it.hasNext()) {
+            ((LocalsTableRow) it.next()).print();
         }
     }
 
-    public Iterator getIterator(){
+    public Iterator getIterator() {
         return nodes.iterator();
+    }
+
+    public ArrayList<LocalsTableRow> getLocalsFor(int id) {
+        ArrayList<LocalsTableRow> result = new ArrayList();
+
+        Iterator it = nodes.iterator();
+        while (it.hasNext()) {
+            LocalsTableRow row = (LocalsTableRow) it.next();
+            if (row.getFuncID() == id) {
+                result.add(row);
+            }
+        }
+        return result;
     }
 }

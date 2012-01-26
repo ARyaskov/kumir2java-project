@@ -115,7 +115,7 @@ public class ConstantsTable {
         }
     }
 
-   public ConstantsTableRow getRowByName(String name) {
+    public ConstantsTableRow getRowByName(String name) {
         ConstantsTableRow result = null;
 
         Iterator it = rows.iterator();
@@ -129,10 +129,20 @@ public class ConstantsTable {
         return result;
     }
 
-   public Iterator getIterator(){
-       return rows.iterator();
-   }
+    public Iterator getIterator() {
+        return rows.iterator();
+    }
 
+    public void removeRow(ConstantsTableRow row) {
+        rows.remove(row);
 
+    }
 
+    public void removeRow(int id) {
+        rows.remove(this.getRowById(id));
+
+    }
+    public int getCount(){
+        return rows.size();
+    }
 }

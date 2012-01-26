@@ -742,7 +742,11 @@ struct NExpr* create_const_expr (enum Const_type type, union Const_values value)
         expr->const_type = Char;
         expr->val.Char = value.Char;
 
-        fprintf(locsfile, value.Char);
+
+        char buf0[10]= {};
+        sprintf(buf0, "\"%s\"", value.Char);
+        fprintf(locsfile, buf0);
+
         fprintf(locsfile," ");
         char buf[10]= {};
         sprintf(buf, "%d", yylloc.first_line);
@@ -769,7 +773,9 @@ struct NExpr* create_const_expr (enum Const_type type, union Const_values value)
         expr->const_type = String;
         expr->val.String = value.String;
 
-        fprintf(locsfile, value.String);
+        char buf0[10]= {};
+        sprintf(buf0, "\"%s\"", value.String);
+        fprintf(locsfile, buf0);
         fprintf(locsfile," ");
         char buf[10]= {};
         sprintf(buf, "%d", yylloc.first_line);

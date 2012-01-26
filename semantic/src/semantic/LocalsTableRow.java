@@ -17,7 +17,7 @@ public class LocalsTableRow {
         m_id = m_idCount++;
         m_locs = locs;
         m_constantType = constType;
-   
+
         m_value = value;
         m_idFunc = idFunc;
         m_isParameter = isParam;
@@ -27,20 +27,25 @@ public class LocalsTableRow {
         return m_value;
     }
 
-    public void print(){
+    public void print() {
         String numLocs = "";
         Iterator it = m_locs.iterator();
         while (it.hasNext()) {
             numLocs += it.next() + ",";
         }
         numLocs = numLocs.substring(0, numLocs.length() - 1);
-        System.out.printf("|%d|%s|%s|%s|%d|\n",m_id,numLocs,m_constantType, m_value.toString(), m_idFunc  );
+        System.out.printf("|%d|%s|%s|%s|%d|\n", m_id, numLocs, m_constantType, m_value.toString(), m_idFunc);
     }
-    public ArrayList<Integer> getLocs(){
+
+    public ArrayList<Integer> getLocs() {
         return m_locs;
     }
 
-    public int getID(){
+    public int getID() {
         return m_id;
+    }
+
+    public int getFuncID() {
+        return m_idFunc;
     }
 }

@@ -333,6 +333,10 @@ public class Vertex {
         return m_virginName;
     }
 
+    
+    public boolean containsAttribute(String att){
+        return m_ats.containsKey(att);
+    }
     /*
      * Устанавливает первоначальное имя
      */
@@ -343,8 +347,10 @@ public class Vertex {
     public void printVertex() {
         System.out.printf("Attributes:<NAME:%s, TYPE:%s>\n"
                 + "Type of symbol: %s\n"
+                + "Virgin Name: %s\n"
                 + "ID: %s\n", getAttribute("NAME"), getAttribute("TYPE"),
                 this.getTypeOfSymbol(),
+                this.getVirginName(),
                 getAttribute("ID"));
     }
 

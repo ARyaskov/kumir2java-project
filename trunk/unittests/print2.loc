@@ -1,6 +1,6 @@
 main 1
 create_ident!1 1
-Строка строка строка 3
+"Строка строка строка" 3
 create_expr_list!2 4
 create_expr_list_print!3 4
 create_stmt_print!4 4

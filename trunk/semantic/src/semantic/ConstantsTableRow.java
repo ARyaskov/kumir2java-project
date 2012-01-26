@@ -59,6 +59,20 @@ public class ConstantsTableRow {
     public ArrayList<Integer> getLocation() {
         return m_locations;
     }
+    
+    public Integer getLowestLocation(){
+        Integer result = null;
+        int lowest = m_locations.get(0);
+        for (Integer inte : m_locations){
+            if (inte.intValue() < lowest){
+                lowest = inte.intValue();
+            }
+        }
+        
+        result = Integer.valueOf(lowest);
+        
+        return result;
+    }
     /*
      * Возвращает тип константы в виде строки
      */

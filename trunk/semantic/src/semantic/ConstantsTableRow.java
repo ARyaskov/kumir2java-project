@@ -60,6 +60,7 @@ public class ConstantsTableRow {
         return m_locations;
     }
     
+    
     public Integer getLowestLocation(){
         Integer result = null;
         int lowest = m_locations.get(0);

@@ -104,6 +104,21 @@ public class Graph {
         return m_nodes.iterator();
     }
 
+    public Vertex getVertexByOrder(int order) {
+        Vertex result = null;
+        String strOrder = String.valueOf(order);
+        Iterator it = this.getIterator();
+        while (it.hasNext()) {
+            Vertex vxNow = (Vertex) it.next();
+
+            if (vxNow.getAttribute("ORDER").equals(strOrder)) {
+                result = vxNow;
+                break;
+            }
+        }
+        return result;
+    }
+
     /*
      * Возвращает список значений атрибутов с именем whatAtt у детей vx-a
      */
@@ -171,8 +186,8 @@ public class Graph {
 
 
     }
-    
-    public void removeByVirginName(String str){
+
+    public void removeByVirginName(String str) {
         m_nodes.remove(getByVertexName(str));
     }
 }

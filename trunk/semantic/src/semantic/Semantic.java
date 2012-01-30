@@ -7,7 +7,7 @@ import java.util.regex.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import java.nio.*;
 import generation.*;
 
 public class Semantic {
@@ -36,13 +36,15 @@ public class Semantic {
     public static int m_objectClassID;
     public static short m_initMethodRefID;
     // имя метода : список инструкций
-    public static HashMap<String, ArrayList<Byte>> bytecodeBuffer;
-  
-
+    public static HashMap<String, ByteBuffer> bytecodeBuffer;
+    public static int m_order = 0;
+    public static int m_mainNameAndType;
+    public static short m_mainClassID;
     /*
      * public static boolean m_isPrevIsType = false; public static String
      * m_prevType = "";
      */
+
     public static void readFile(String path) {
         fileContent = "";
         Scanner in = null;
@@ -290,7 +292,7 @@ public class Semantic {
 
         // System.out.printf("Create vertex: %s\n", str_in);
         result.addAttribute("NAME", name);
-
+        result.addAttribute("ORDER", String.valueOf(m_order++));
 
 
         if (!id.isEmpty()) {
@@ -648,44 +650,45 @@ public class Semantic {
         HashMap<String, String> tempLocals = new HashMap();
 
         Vertex vx = getChildByAttName(in_vx, "create_param_list");
-        for (Vertex nowVx : vx.getChildList()) {
-            if (nowVx.getAttribute("NAME").equals("create_from_arg_rezvalue")) {
-                Vertex createArg = nowVx.getChildList().get(0);
-                Vertex create_atomic_type = createArg.getChildList().get(0);
-                String type = create_atomic_type.getChildList().get(0).getAttribute("NAME");
+        if (vx != null) {
+            for (Vertex nowVx : vx.getChildList()) {
+                if (nowVx.getAttribute("NAME").equals("create_from_arg_rezvalue")) {
+                    Vertex createArg = nowVx.getChildList().get(0);
+                    Vertex create_atomic_type = createArg.getChildList().get(0);
+                    String type = create_atomic_type.getChildList().get(0).getAttribute("NAME");
 
-                String name = null;
-                Vertex createEnumAtomicIdentifierList = createArg.getChildList().get(1);
-                for (Vertex inEnum : createEnumAtomicIdentifierList.getChildList()) {
-                    if (inEnum.getAttribute("NAME").equals("create_ident")) {
-                        name = inEnum.getChildList().get(0).getAttribute("NAME");
-                        tempLocals.put(name, type);
-                    } else if (inEnum.getAttribute("NAME").equals("append_enum_atomic_identifier_list")) {
-                        name = inEnum.getChildList().get(0).getChildList().get(0).getAttribute("NAME");
-                        tempLocals.put(name, type);
+                    String name = null;
+                    Vertex createEnumAtomicIdentifierList = createArg.getChildList().get(1);
+                    for (Vertex inEnum : createEnumAtomicIdentifierList.getChildList()) {
+                        if (inEnum.getAttribute("NAME").equals("create_ident")) {
+                            name = inEnum.getChildList().get(0).getAttribute("NAME");
+                            tempLocals.put(name, type);
+                        } else if (inEnum.getAttribute("NAME").equals("append_enum_atomic_identifier_list")) {
+                            name = inEnum.getChildList().get(0).getChildList().get(0).getAttribute("NAME");
+                            tempLocals.put(name, type);
+                        }
                     }
-                }
 
-            } else if (nowVx.getAttribute("NAME").equals("append_param_to_list")) {
-                Vertex createArg = nowVx.getChildList().get(0).getChildList().get(0);
-                Vertex create_atomic_type = createArg.getChildList().get(0);
-                String type = create_atomic_type.getChildList().get(0).getAttribute("NAME");
+                } else if (nowVx.getAttribute("NAME").equals("append_param_to_list")) {
+                    Vertex createArg = nowVx.getChildList().get(0).getChildList().get(0);
+                    Vertex create_atomic_type = createArg.getChildList().get(0);
+                    String type = create_atomic_type.getChildList().get(0).getAttribute("NAME");
 
-                String name = null;
-                Vertex createEnumAtomicIdentifierList = createArg.getChildList().get(1);
-                for (Vertex inEnum : createEnumAtomicIdentifierList.getChildList()) {
-                    if (inEnum.getAttribute("NAME").equals("create_ident")) {
-                        name = inEnum.getChildList().get(0).getAttribute("NAME");
-                        tempLocals.put(name, type);
-                    } else if (inEnum.getAttribute("NAME").equals("append_enum_atomic_identifier_list")) {
-                        name = inEnum.getChildList().get(0).getChildList().get(0).getAttribute("NAME");
-                        tempLocals.put(name, type);
+                    String name = null;
+                    Vertex createEnumAtomicIdentifierList = createArg.getChildList().get(1);
+                    for (Vertex inEnum : createEnumAtomicIdentifierList.getChildList()) {
+                        if (inEnum.getAttribute("NAME").equals("create_ident")) {
+                            name = inEnum.getChildList().get(0).getAttribute("NAME");
+                            tempLocals.put(name, type);
+                        } else if (inEnum.getAttribute("NAME").equals("append_enum_atomic_identifier_list")) {
+                            name = inEnum.getChildList().get(0).getChildList().get(0).getAttribute("NAME");
+                            tempLocals.put(name, type);
+                        }
                     }
                 }
             }
+
         }
-
-
 
 
         return tempLocals;
@@ -1448,25 +1451,122 @@ public class Semantic {
         return matcher.matches();
     }
 
-    public static String findClassName(String methodRef) {
-        String result;
-        result = "1";
+    public static int findClassID(String methodRef) {
+        int result;
+        result = constantsTable.getRowByName("MainClass").getID();
 
         return result;
 
     }
 
-    public static String findNameAndType(String methodRef) {
-        String result = null;
+    public static int findNameAndTypeID(String methodRef) {
+        int result = -1;
 
         Vertex vx = g.getVertexByVirginName(methodRef);
         String name = vx.getChildList().get(0).getChildList().get(0).getAttribute("NAME");
         FPTableRow fpr = fpTable.getRowByName(name);
         if (fpr != null) {
-            result = String.valueOf(fpr.getID());
+            Iterator it = constantsTable.getIterator();
+            while (it.hasNext()) {
+                ConstantsTableRow row = (ConstantsTableRow) it.next();
+                if (row.getType().equals("NameAndType")) {
+                    String funID = ((String) row.getValue()).split(",")[0];
+                    String val = (String) constantsTable.getRowById(Integer.valueOf(funID).intValue()).getValue();
+                    if (val.equals(name)) {
+                        result = row.getID();
+                        break;
+                    }
+
+                }
+            }
+
+
         }
         return result;
 
+    }
+
+    public static void addRTLToConstantsTable() {
+        ConstantsTableRow row;
+        row = new ConstantsTableRow(new ArrayList(), "UTF-8", "RTL");
+        constantsTable.addRow(row);
+
+
+
+        row = new ConstantsTableRow(new ArrayList(), "Class", ConstantsTableRow.m_constantIDCount - 1);
+        constantsTable.addRow(row);
+
+        String classID = String.valueOf(row.getID());
+
+        row = new ConstantsTableRow(new ArrayList(), "UTF-8", "(Ljava/lang/Object;)V");
+        constantsTable.addRow(row);
+        row = new ConstantsTableRow(new ArrayList(), "UTF-8", "ku_print");
+        constantsTable.addRow(row);
+
+        String id1 = String.valueOf(ConstantsTableRow.m_constantIDCount - 1);
+        String id2 = String.valueOf(ConstantsTableRow.m_constantIDCount - 2);
+        row = new ConstantsTableRow(new ArrayList(), "NameAndType", id1 + "," + id2);
+        constantsTable.addRow(row);
+       
+        row = new ConstantsTableRow(new ArrayList(), "MethodRef", classID + ","
+                + String.valueOf(row.getID()));
+        constantsTable.addRow(row);
+
+        row = new ConstantsTableRow(new ArrayList(), "UTF-8", "ku_println");
+        constantsTable.addRow(row);
+
+        int temp_ku_printlnID = row.getID();
+        
+        id1 = String.valueOf(ConstantsTableRow.m_constantIDCount - 1);
+        row = new ConstantsTableRow(new ArrayList(), "NameAndType", id1 + "," + id2);
+        constantsTable.addRow(row);
+
+        row = new ConstantsTableRow(new ArrayList(), "MethodRef", classID + ","
+                + String.valueOf(row.getID()));
+        constantsTable.addRow(row);
+
+        
+        row = new ConstantsTableRow(new ArrayList(), "UTF-8", "()V");
+        constantsTable.addRow(row);
+        id1 = String.valueOf(temp_ku_printlnID);
+        id2 = String.valueOf(row.getID());
+        row = new ConstantsTableRow(new ArrayList(), "NameAndType", id1 + "," + id2);
+        constantsTable.addRow(row);
+
+
+        row = new ConstantsTableRow(new ArrayList(), "MethodRef", classID + ","
+                + String.valueOf(row.getID()));
+        constantsTable.addRow(row);
+
+    }
+
+    public static void addMethodRefForFunctions() {
+
+        Iterator it = fpTable.getIterator();
+        while (it.hasNext()) {
+            FPTableRow frow = (FPTableRow) it.next();
+            String name = frow.getName();
+            String descr = "(";
+            for (String every : frow.getParTypes()) {
+                descr += every;
+            }
+            descr += ")";
+            String retType = frow.getReturnType();
+            descr += retType;
+
+            name = String.valueOf(constantsTable.getRowByName(name).getID());
+            descr = String.valueOf(constantsTable.getRowByName(descr).getID());
+            String _nameAndType = name + "," + descr;
+            ConstantsTableRow crow = new ConstantsTableRow(new ArrayList(), "NameAndType", _nameAndType);
+            constantsTable.addRow(crow);
+
+            String nameAndTypeID = String.valueOf(crow.getID());
+
+            String _methodRef = String.valueOf(m_mainClassID) + "," + nameAndTypeID;
+
+            crow = new ConstantsTableRow(new ArrayList(), "MethodRef", _methodRef);
+            constantsTable.addRow(crow);
+        }
     }
 
     public static void fillConstantsTable() {
@@ -1481,6 +1581,9 @@ public class Semantic {
         constantsTable.addRow(row);
         m_objectClassID = row.getID();
 
+
+
+
         row = new ConstantsTableRow(new ArrayList(), "UTF-8", "<init>");
         constantsTable.addRow(row);
         String _name = String.valueOf(row.getID());
@@ -1490,20 +1593,46 @@ public class Semantic {
         String _nameAndType = _name + "," + _descr;
         row = new ConstantsTableRow(new ArrayList(), "NameAndType", _nameAndType);
         constantsTable.addRow(row);
-        m_initMethodRefID = (short)row.getID();
+
 
         String _methodRef = String.valueOf(m_objectClassID) + "," + String.valueOf(row.getID());
         row = new ConstantsTableRow(new ArrayList(), "MethodRef", _methodRef);
         constantsTable.addRow(row);
+        m_initMethodRefID = (short) row.getID();
+
 
         row = new ConstantsTableRow(new ArrayList(), "UTF-8", "MainClass");
         constantsTable.addRow(row);
         m_currentClassID = row.getID();
         row = new ConstantsTableRow(new ArrayList(), "Class", ConstantsTableRow.m_constantIDCount - 1);
         constantsTable.addRow(row);
+        m_mainClassID = (short) row.getID();
+
+        row = new ConstantsTableRow(new ArrayList(), "UTF-8", "this");
+        constantsTable.addRow(row);
+        row = new ConstantsTableRow(new ArrayList(), "UTF-8", "LMainClass;");
+        constantsTable.addRow(row);
 
 
+        row = new ConstantsTableRow(new ArrayList(), "UTF-8", "main");
+        constantsTable.addRow(row);
+        _name = String.valueOf(row.getID());
+        row = new ConstantsTableRow(new ArrayList(), "UTF-8", "([Ljava/lang/String;)V");
+        constantsTable.addRow(row);
+        _descr = String.valueOf(row.getID());
+        _nameAndType = _name + "," + _descr;
+        row = new ConstantsTableRow(new ArrayList(), "NameAndType", _nameAndType);
+        constantsTable.addRow(row);
+        m_mainNameAndType = row.getID();
+        
+        _methodRef = String.valueOf(m_mainClassID) + "," + String.valueOf(m_mainNameAndType);
+        row = new ConstantsTableRow(new ArrayList(), "MethodRef", _methodRef);
+        constantsTable.addRow(row);
 
+
+        addRTLToConstantsTable();
+
+        addMethodRefForFunctions();
 
         Iterator it = multipleLocations.keySet().iterator();
         while (it.hasNext()) {
@@ -1553,10 +1682,10 @@ public class Semantic {
                 String type = "MethodRef";
                 Integer loc = locations.get(str);
 
-                String className = findClassName(str);
-                String nameAndType = findNameAndType(str);
+                int classID = findClassID(str);
+                int nameAndTypeID = findNameAndTypeID(str);
 
-                String value = className + "," + nameAndType;
+                String value = Integer.toString(classID) + "," + Integer.toString(nameAndTypeID);
                 row = new ConstantsTableRow(loc.intValue(), type, value);
                 constantsTable.addRow(row);
             }
@@ -1781,6 +1910,7 @@ public class Semantic {
         decls = new HashMap();
         constantsTable = new ConstantsTable();
         fpTable = new FPTable();
+        bytecodeBuffer = new HashMap();
         //  filename = "..\\unittests\\procsAndFuncs1.dot";
         filename = "..\\unittests\\procsAndFuncs1.dot";
         filenameLoc = filename.substring(0, filename.length() - 4).concat(".loc");
@@ -1944,13 +2074,13 @@ public class Semantic {
     }
 
     public static void writeInitThings() {
-        ArrayList<Byte> commands = new ArrayList();
+        ByteBuffer commands = ByteBuffer.allocate(10);
 
 
-        commands.add(CG.ALOAD0);
-        commands.add(CG.INVOKESPECIAL);
-        CG.putShortIntoByteArray(m_initMethodRefID, commands);
-        commands.add(CG.RETURN);
+        commands.put(CG.ALOAD0);
+        commands.put(CG.INVOKESPECIAL);
+        commands.putShort(m_initMethodRefID);
+        commands.put(CG.RETURN);
 
 
         bytecodeBuffer.put("<init>", commands);
@@ -1971,13 +2101,12 @@ public class Semantic {
             Logger.getLogger(Semantic.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        System.out.print("Таблица констант:\n");
-        constantsTable.printTable();
-        System.out.print("\nТаблица функций:\n");
-        fpTable.printTable();
-        System.out.print("\nТаблица локальных переменных:\n");
-        localsTable.printTable();
-        processParamListOnTables();
+        /*
+         * System.out.print("Таблица констант:\n"); constantsTable.printTable();
+         * System.out.print("\nТаблица функций:\n"); fpTable.printTable();
+         * System.out.print("\nТаблица локальных переменных:\n");
+         * localsTable.printTable(); processParamListOnTables();
+         */
 
 
         // transformTree();
@@ -1986,8 +2115,9 @@ public class Semantic {
 
         if (allRight == true) {
             try {
-                Generator generator = new Generator("out.class");
+                Generator generator = new Generator("MainClass.class");
 
+                writeInitThings();
                 generator.writeProlog();
                 generator.writeConstantsTable(constantsTable);
 
@@ -1996,6 +2126,9 @@ public class Semantic {
                 generator.writeParentClass(m_objectClassID);
                 generator.writeInterfaces();
                 generator.writeFields();
+
+                generator.giantSwitch();
+
                 generator.writeMethods();
                 generator.writeAttributes();
 

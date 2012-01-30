@@ -46,16 +46,23 @@ public class FPTable {
         return result;
     }
 
-    public void printTable(){
+    public FPTableRow getRowByOrder(int order) {
+        FPTableRow result = null;
+
+        result = nodes.get(order);
+
+        return result;
+    }
+
+    public void printTable() {
         Iterator it = nodes.iterator();
-        while(it.hasNext()){
-            ((FPTableRow)it.next()).printRow();
+        while (it.hasNext()) {
+            ((FPTableRow) it.next()).printRow();
 
         }
     }
 
-    public int getSize(){
+    public int getSize() {
         return nodes.size();
     }
-
 }

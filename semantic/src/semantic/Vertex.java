@@ -276,6 +276,26 @@ public class Vertex {
         return result;
     }
 
+    public Vertex getChildByOrder(int order) {
+        Vertex result = null;
+
+        result = m_childs.get(order);
+
+        return result;
+    }
+
+    public Vertex getLastDescendant() {
+        Vertex result = this;
+
+        Iterator it = result.getChildList().iterator();
+        while (it.hasNext()) {
+            Vertex vxNow = (Vertex) it.next();
+            result = vxNow.getLastDescendant();
+        }
+
+        return result;
+    }
+
     /*
      * Возвращает признак - наследует ли данная вершина типы от потомков
      */
@@ -333,25 +353,31 @@ public class Vertex {
         return m_virginName;
     }
 
-    
-    public boolean containsAttribute(String att){
+    public boolean containsAttribute(String att) {
         return m_ats.containsKey(att);
     }
     /*
      * Устанавливает первоначальное имя
      */
+
     public void setVirginName(String newName) {
         m_virginName = newName;
     }
 
     public void printVertex() {
-        System.out.printf("Attributes:<NAME:%s, TYPE:%s>\n"
+        System.out.printf("%s\nAttributes:<NAME:%s, TYPE:%s>\n"
                 + "Type of symbol: %s\n"
                 + "Virgin Name: %s\n"
-                + "ID: %s\n", getAttribute("NAME"), getAttribute("TYPE"),
+                + "ID: %s\n"
+                + "Order: %s\n"
+                + "Childs: %s\n"
+                + "Parents: %s\n", this.toString(), getAttribute("NAME"), getAttribute("TYPE"),
                 this.getTypeOfSymbol(),
                 this.getVirginName(),
-                getAttribute("ID"));
+                getAttribute("ID"),
+                this.getAttribute("ORDER"),
+                this.getChildList().toString(),
+                this.getParentList().toString());
     }
 
     public Vertex(String str) {

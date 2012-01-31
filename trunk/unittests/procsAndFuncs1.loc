@@ -1,4 +1,4 @@
-тест 1
+филин 1
 create_ident!1 1
 create_atomic_type!2 3
 a 3
@@ -8,8 +8,8 @@ create_from_atomic_decl!5 4
 create_from_atomic_decl!5 4
 create_stmt_decl!6 4
 create_stmt_list!7 4
-43578787 4
-20 4
+1234321 4
+36721 4
 +!8 5
 +!8 5
 create_expr_list!9 5

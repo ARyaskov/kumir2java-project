@@ -1486,57 +1486,43 @@ public class Semantic {
 
     }
 
+    public static void makeMethodRef(String classID, String funName, String descriptor) {
+
+        ConstantsTableRow row = new ConstantsTableRow(new ArrayList(), "UTF-8", descriptor);
+        constantsTable.addRow(row);
+        int descID = row.getID();
+        row = new ConstantsTableRow(new ArrayList(), "UTF-8", funName);
+        constantsTable.addRow(row);
+        int nameID = row.getID();
+
+        String id1 = String.valueOf(nameID);
+        String id2 = String.valueOf(descID);
+        row = new ConstantsTableRow(new ArrayList(), "NameAndType", id1 + "," + id2);
+        constantsTable.addRow(row);
+        int methodRefID = row.getID();
+
+        row = new ConstantsTableRow(new ArrayList(), "MethodRef", classID + ","
+                + String.valueOf(methodRefID));
+        constantsTable.addRow(row);
+
+    }
+
     public static void addRTLToConstantsTable() {
         ConstantsTableRow row;
         row = new ConstantsTableRow(new ArrayList(), "UTF-8", "RTL");
         constantsTable.addRow(row);
-
-
 
         row = new ConstantsTableRow(new ArrayList(), "Class", ConstantsTableRow.m_constantIDCount - 1);
         constantsTable.addRow(row);
 
         String classID = String.valueOf(row.getID());
 
-        row = new ConstantsTableRow(new ArrayList(), "UTF-8", "(Ljava/lang/Object;)V");
-        constantsTable.addRow(row);
-        row = new ConstantsTableRow(new ArrayList(), "UTF-8", "ku_print");
-        constantsTable.addRow(row);
 
-        String id1 = String.valueOf(ConstantsTableRow.m_constantIDCount - 1);
-        String id2 = String.valueOf(ConstantsTableRow.m_constantIDCount - 2);
-        row = new ConstantsTableRow(new ArrayList(), "NameAndType", id1 + "," + id2);
-        constantsTable.addRow(row);
-       
-        row = new ConstantsTableRow(new ArrayList(), "MethodRef", classID + ","
-                + String.valueOf(row.getID()));
-        constantsTable.addRow(row);
-
-        row = new ConstantsTableRow(new ArrayList(), "UTF-8", "ku_println");
-        constantsTable.addRow(row);
-
-        int temp_ku_printlnID = row.getID();
-        
-        id1 = String.valueOf(ConstantsTableRow.m_constantIDCount - 1);
-        row = new ConstantsTableRow(new ArrayList(), "NameAndType", id1 + "," + id2);
-        constantsTable.addRow(row);
-
-        row = new ConstantsTableRow(new ArrayList(), "MethodRef", classID + ","
-                + String.valueOf(row.getID()));
-        constantsTable.addRow(row);
-
-        
-        row = new ConstantsTableRow(new ArrayList(), "UTF-8", "()V");
-        constantsTable.addRow(row);
-        id1 = String.valueOf(temp_ku_printlnID);
-        id2 = String.valueOf(row.getID());
-        row = new ConstantsTableRow(new ArrayList(), "NameAndType", id1 + "," + id2);
-        constantsTable.addRow(row);
-
-
-        row = new ConstantsTableRow(new ArrayList(), "MethodRef", classID + ","
-                + String.valueOf(row.getID()));
-        constantsTable.addRow(row);
+        makeMethodRef(classID, "ku_print", "(I)V");
+        makeMethodRef(classID, "ku_print", "(Ljava/lang/String;)V");
+        makeMethodRef(classID, "ku_println", "(I)V");
+        makeMethodRef(classID, "ku_println", "(Ljava/lang/String;)V");
+        makeMethodRef(classID, "ku_println", "()V");
 
     }
 
@@ -1603,10 +1589,14 @@ public class Semantic {
 
         row = new ConstantsTableRow(new ArrayList(), "UTF-8", "MainClass");
         constantsTable.addRow(row);
-        m_currentClassID = row.getID();
+
         row = new ConstantsTableRow(new ArrayList(), "Class", ConstantsTableRow.m_constantIDCount - 1);
         constantsTable.addRow(row);
+
+        m_currentClassID = row.getID();
         m_mainClassID = (short) row.getID();
+
+
 
         row = new ConstantsTableRow(new ArrayList(), "UTF-8", "this");
         constantsTable.addRow(row);
@@ -1624,7 +1614,7 @@ public class Semantic {
         row = new ConstantsTableRow(new ArrayList(), "NameAndType", _nameAndType);
         constantsTable.addRow(row);
         m_mainNameAndType = row.getID();
-        
+
         _methodRef = String.valueOf(m_mainClassID) + "," + String.valueOf(m_mainNameAndType);
         row = new ConstantsTableRow(new ArrayList(), "MethodRef", _methodRef);
         constantsTable.addRow(row);
@@ -2101,16 +2091,17 @@ public class Semantic {
             Logger.getLogger(Semantic.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        /*
-         * System.out.print("Таблица констант:\n"); constantsTable.printTable();
-         * System.out.print("\nТаблица функций:\n"); fpTable.printTable();
-         * System.out.print("\nТаблица локальных переменных:\n");
-         * localsTable.printTable(); processParamListOnTables();
-         */
+        
+          System.out.print("Таблица констант:\n"); constantsTable.printTable();
+         // System.out.print("\nТаблица функций:\n"); fpTable.printTable();
+        //  System.out.print("\nТаблица локальных переменных:\n");
+         //localsTable.printTable();
+          //processParamListOnTables();
+         
 
 
         // transformTree();
-        g.printInfo();
+        //g.printInfo();
 
 
         if (allRight == true) {

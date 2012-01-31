@@ -1,12 +1,20 @@
 
 public class RTL {
 
-    public static void ku_print(Object obj) {
-        System.out.print(obj);
+    public static void ku_print(String str) {
+        System.out.print(str);
     }
 
-    public static void ku_println(Object obj) {
-        System.out.println(obj);
+    public static void ku_print(int inte) {
+        System.out.print(inte);
+    }
+
+    public static void ku_println(int inte) {
+        System.out.println(inte);
+    }
+
+    public static void ku_println(String str) {
+        System.out.println(str);
     }
 
     public static void ku_println() {

@@ -129,8 +129,28 @@ public class ConstantsTable {
         return result;
     }
 
+    public ConstantsTableRow getRowByTypeAndName(String type, String name) {
+        ConstantsTableRow result = null;
 
-    
+        if (type.equals("String")) {
+            Iterator it = rows.iterator();
+            while (it.hasNext()) {
+                ConstantsTableRow row = (ConstantsTableRow) it.next();
+                if (row.getType().equals(type)) {
+                    int id = Integer.valueOf((String) row.getValue()).intValue();
+                    ConstantsTableRow tempRow = Semantic.constantsTable.getRowById(id);
+                    if (((String) tempRow.getValue()).equals(name)) {
+                        result = row;
+                        break;
+                    }
+                }
+            }
+        } else if (type.equals("UTF-8")) {
+            result = getRowByName(name);
+        }
+        return result;
+    }
+
     public Iterator getIterator() {
         return rows.iterator();
     }
@@ -144,7 +164,8 @@ public class ConstantsTable {
         rows.remove(this.getRowById(id));
 
     }
-    public int getCount(){
+
+    public int getCount() {
         return rows.size();
     }
 }

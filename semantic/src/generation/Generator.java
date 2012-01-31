@@ -247,7 +247,7 @@ public class Generator {
         descr += ")";
         String retType = row.getReturnType();
         descr += retType;
-        short id = findIdForMethodRef("MainClass",name, descr);
+        short id = findIdForMethodRef("MainClass", name, descr);
 
 
         code.put(CG.INVOKESTATIC);
@@ -285,12 +285,12 @@ public class Generator {
         m_output.writeShort((short) 1);
 
         // длина байт-кода
-        m_output.writeInt(len);
+        m_output.writeInt(code.position());
 
         // байткод
         byte barray[] = code.array();
         int limit = code.position();
-        for (int i = 0; i < len; i++) {
+        for (int i = 0; i < limit; i++) {
             m_output.writeByte(barray[i]);
         }
 
@@ -457,7 +457,7 @@ public class Generator {
         return result;
     }
 
-    public static short findIdForMethodRef(String className , String name, String descr) {
+    public static short findIdForMethodRef(String className, String name, String descr) {
         short result = -1;
 
 
@@ -543,8 +543,19 @@ public class Generator {
                 break;
 
                 case "create_expr_list_print": {
+                    String type = vx.getChildByOrder(0).getChildByOrder(0).getAttribute("TYPE");
+                    short idMethodRef=0;
+                    if (type.equals("цел")) {
+                        idMethodRef = findIdForMethodRef("RTL", "ku_print", "(I)V");
+                    } else if (type.equals("лит")) {
+                        String whatPrint = vx.getChildByOrder(0).getChildByOrder(0).getAttribute("NAME");
+                        // добавить поддержку перечисления в печати
+                        short idWhatPrint = (short)Semantic.constantsTable.getRowByTypeAndName("String", whatPrint).getID();
+                        m_commands.put(CG.LDC_W);
+                        m_commands.putShort(idWhatPrint);
+                        idMethodRef = findIdForMethodRef("RTL", "ku_print", "(Ljava/lang/String;)V");
+                    }
                     m_commands.put(CG.INVOKESTATIC);
-                    short idMethodRef = findIdForMethodRef("RTL", "ku_print", "(Ljava/lang/Object;)V");
                     m_commands.putShort(idMethodRef);
                 }
                 break;

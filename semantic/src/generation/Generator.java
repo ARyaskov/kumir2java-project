@@ -17,7 +17,8 @@ public class Generator {
 
     private DataOutputStream m_output;
     private short OPERAND_STACK_SIZE = 2048;
-    ByteBuffer m_commands;
+    private ByteBuffer m_commands;
+    private Stack m_idStack;
 
     public Generator(String filename) {
         try {
@@ -25,6 +26,7 @@ public class Generator {
                     new BufferedOutputStream(
                     new FileOutputStream(filename)));
             m_commands = ByteBuffer.allocate(100);
+            m_idStack = new Stack();
         } catch (FileNotFoundException ex) {
             Logger.getLogger(Generator.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -489,14 +491,16 @@ public class Generator {
                         curMethod = vx.getChildList().get(0).getAttribute("NAME");
                     } else if (vx.getParentList().get(0).getAttribute("NAME").equals("create_enum_atomic_identifier_list")) {
                     } else {
-                        /*
-                         * String name =
-                         * vx.getChildByOrder(0).getAttribute("NAME"); short id
-                         * =
-                         * Integer.valueOf(Semantic.constantsTable.getRowByName(name).getID()).shortValue();
-                         * m_commands.put(CG.LDC_W); m_commands.putShort((short)
-                         * id);
-                         */
+
+
+                        String name =
+                                vx.getChildByOrder(0).getAttribute("NAME");
+
+                        int id =
+                                Integer.valueOf(Semantic.localsTable.getRowByName(name).getID()).shortValue();
+                        m_idStack.push(id);
+
+
                     }
                 }
                 break;
@@ -528,35 +532,169 @@ public class Generator {
                     m_commands.put(CG.IADD);
                 }
                 break;
+                case "-": {
+                    for (int i = 0; i < 2; i++) {
+                        Vertex tempVx = vx.getChildByOrder(i);
+                        if (tempVx.getAttribute("NAME").equals("create_expr_id")) {
+                            Vertex idVx = vx.getChildByOrder(i).getLastDescendant();
+                            String name = idVx.getAttribute("NAME");
+                            int idCT = Semantic.constantsTable.getRowByName(name).getID();
+                            m_commands.put(CG.LDC_W);
+                            m_commands.putShort((short) idCT);
+
+                        } else if (vx.getChildByOrder(i).getAttribute("ID").equals("-1")) {
+                            String val = vx.getChildByOrder(i).getAttribute("NAME");
+                            int intVal = Integer.valueOf(val);
+                            if (intVal >= -32768 && intVal < 32768) {
+                                m_commands.put(CG.SIPUSH);
+                                m_commands.putShort((short) intVal);
+                            } else {// ищем в таблице констант
+                                ConstantsTableRow row = Semantic.constantsTable.getRowByName(val);
+                                int id = row.getID();
+                                m_commands.put(CG.LDC_W);
+                                m_commands.putShort((short) id);
+                            }
+                        }
+                    }
+
+                    m_commands.put(CG.ISUB);
+                }
+                case "*": {
+                    for (int i = 0; i < 2; i++) {
+                        Vertex tempVx = vx.getChildByOrder(i);
+                        if (tempVx.getAttribute("NAME").equals("create_expr_id")) {
+                            Vertex idVx = vx.getChildByOrder(i).getLastDescendant();
+                            String name = idVx.getAttribute("NAME");
+                            int idCT = Semantic.constantsTable.getRowByName(name).getID();
+                            m_commands.put(CG.LDC_W);
+                            m_commands.putShort((short) idCT);
+
+                        } else if (vx.getChildByOrder(i).getAttribute("ID").equals("-1")) {
+                            String val = vx.getChildByOrder(i).getAttribute("NAME");
+                            int intVal = Integer.valueOf(val);
+                            if (intVal >= -32768 && intVal < 32768) {
+                                m_commands.put(CG.SIPUSH);
+                                m_commands.putShort((short) intVal);
+                            } else {// ищем в таблице констант
+                                ConstantsTableRow row = Semantic.constantsTable.getRowByName(val);
+                                int id = row.getID();
+                                m_commands.put(CG.LDC_W);
+                                m_commands.putShort((short) id);
+                            }
+                        }
+                    }
+
+                    m_commands.put(CG.IMUL);
+                }
+                break;
+                case "/": {
+                    for (int i = 0; i < 2; i++) {
+                        Vertex tempVx = vx.getChildByOrder(i);
+                        if (tempVx.getAttribute("NAME").equals("create_expr_id")) {
+                            Vertex idVx = vx.getChildByOrder(i).getLastDescendant();
+                            String name = idVx.getAttribute("NAME");
+                            int idCT = Semantic.constantsTable.getRowByName(name).getID();
+                            m_commands.put(CG.LDC_W);
+                            m_commands.putShort((short) idCT);
+
+                        } else if (vx.getChildByOrder(i).getAttribute("ID").equals("-1")) {
+                            String val = vx.getChildByOrder(i).getAttribute("NAME");
+                            int intVal = Integer.valueOf(val);
+                            if (intVal >= -32768 && intVal < 32768) {
+                                m_commands.put(CG.SIPUSH);
+                                m_commands.putShort((short) intVal);
+                            } else {// ищем в таблице констант
+                                ConstantsTableRow row = Semantic.constantsTable.getRowByName(val);
+                                int id = row.getID();
+                                m_commands.put(CG.LDC_W);
+                                m_commands.putShort((short) id);
+                            }
+                        }
+                    }
+
+                    m_commands.put(CG.IDIV);
+                }
+                break;
+                case "**": {
+                    for (int i = 0; i < 2; i++) {
+                        Vertex tempVx = vx.getChildByOrder(i);
+                        if (tempVx.getAttribute("NAME").equals("create_expr_id")) {
+                            Vertex idVx = vx.getChildByOrder(i).getLastDescendant();
+                            String name = idVx.getAttribute("NAME");
+                            int idCT = Semantic.constantsTable.getRowByName(name).getID();
+                            m_commands.put(CG.LDC_W);
+                            m_commands.putShort((short) idCT);
+
+                        } else if (vx.getChildByOrder(i).getAttribute("ID").equals("-1")) {
+                            String val = vx.getChildByOrder(i).getAttribute("NAME");
+                            int intVal = Integer.valueOf(val);
+                            if (intVal >= -32768 && intVal < 32768) {
+                                m_commands.put(CG.SIPUSH);
+                                m_commands.putShort((short) intVal);
+
+                            } else {// ищем в таблице констант
+                                ConstantsTableRow row = Semantic.constantsTable.getRowByName(val);
+                                int id = row.getID();
+                                m_commands.put(CG.LDC_W);
+                                m_commands.putShort((short) id);
+
+                            }
+                        }
+                    }
+                    m_commands.put(CG.INVOKESTATIC);
+                    int idMethodRef = findIdForMethodRef("RTL", "ku_pow", "(II)I");
+                    m_commands.putShort((short) idMethodRef);
+
+                }
+                break;
                 case ":=": {
-                    /*
-                     * if
-                     * (vx.getChildByOrder(0).getAttribute("NAME").equals("create_expr_id"))
-                     * { String name =
-                     * vx.getChildByOrder(0).getChildByOrder(0).getChildByOrder(0).getAttribute("NAME");
-                     * short location =
-                     * Integer.valueOf(Semantic.constantsTable.getRowByName(name).getID()).shortValue();
-                     * isPrepareForAssmnt = true; m_commands.put(CG.ISTORE); //
-                     * fixxxx }
-                     */
+
+                    if (vx.getParentList().get(0).getAttribute("NAME").equals(":=")) {
+                        m_commands.put(CG.DUP);
+                    }
+                    m_commands.put(CG.ISTORE);
+                    int id = (int) m_idStack.pop();
+                    m_commands.put((byte) id);
+
                 }
                 break;
 
                 case "create_expr_list_print": {
-                    String type = vx.getChildByOrder(0).getChildByOrder(0).getAttribute("TYPE");
-                    short idMethodRef=0;
-                    if (type.equals("цел")) {
-                        idMethodRef = findIdForMethodRef("RTL", "ku_print", "(I)V");
-                    } else if (type.equals("лит")) {
-                        String whatPrint = vx.getChildByOrder(0).getChildByOrder(0).getAttribute("NAME");
-                        // добавить поддержку перечисления в печати
-                        short idWhatPrint = (short)Semantic.constantsTable.getRowByTypeAndName("String", whatPrint).getID();
-                        m_commands.put(CG.LDC_W);
-                        m_commands.putShort(idWhatPrint);
-                        idMethodRef = findIdForMethodRef("RTL", "ku_print", "(Ljava/lang/String;)V");
+                    short idMethodRef = 0;
+                    int childsCount = vx.getChildByOrder(0).getChildList().size();
+
+                    for (int j = 0; j < childsCount; j++) {
+                        Vertex vxNow = vx.getChildByOrder(0).getChildByOrder(j);
+
+                        if (vxNow.getAttribute("NAME").equals("append_expr_to_list")) {
+                            vxNow = vx.getChildByOrder(0).getChildByOrder(j).getChildByOrder(0);
+                        }
+                        int id = 0;
+                        if (vxNow.getAttribute("NAME").equals("create_expr_id")) {
+                            vxNow = vxNow.getChildByOrder(0).getChildByOrder(0);
+                        }
+
+                        String type = vxNow.getAttribute("TYPE");
+                        String whatPrint = vxNow.getAttribute("NAME");
+                        if (vxNow.getTypeOfSymbol().equals("ID")) {
+                            id = Semantic.localsTable.getRowByName(whatPrint).getID();
+                            m_commands.put(CG.ILOAD);
+                            m_commands.put((byte) id);
+                        }
+                        if (type.equals("цел")) {
+                            idMethodRef = findIdForMethodRef("RTL", "ku_print", "(I)V");
+                        } else if (type.equals("лит") && whatPrint.equals("нс")) {
+                            idMethodRef = findIdForMethodRef("RTL", "ku_println", "()V");
+                        } else if (type.equals("лит")) {
+                            short idWhatPrint = (short) Semantic.constantsTable.getRowByTypeAndName("String", whatPrint).getID();
+                            m_commands.put(CG.LDC_W);
+                            m_commands.putShort(idWhatPrint);
+                            idMethodRef = findIdForMethodRef("RTL", "ku_print", "(Ljava/lang/String;)V");
+                        }
+                        m_commands.put(CG.INVOKESTATIC);
+                        m_commands.putShort(idMethodRef);
+
                     }
-                    m_commands.put(CG.INVOKESTATIC);
-                    m_commands.putShort(idMethodRef);
                 }
                 break;
                 case "create_proc": {

@@ -21,9 +21,15 @@ public class CG {
     public static final byte SIPUSH = (byte) 0x11;
     public static final byte ISTORE = (byte) 0x36;
     public static final byte ISTORE_0 = (byte) 0x3b;
+    public static final byte ILOAD = (byte) 0x15;
     public static final byte LDC = (byte) 0x12;
     public static final byte LDC_W = (byte) 0x13;
     public static final byte IADD = (byte) 0x60;
+    public static final byte ISUB = (byte) 0x64;
+    public static final byte IMUL = (byte) 0x68;
+    public static final byte IDIV = (byte) 0x6c;
+    public static final byte I2D = (byte) 0x87;
+    public static final byte DUP = (byte) 0x59;
 
     public static void putShortIntoByteArray(short two_bytes, ArrayList<Byte> bytes) {
         ByteBuffer buffer = ByteBuffer.allocate(2);

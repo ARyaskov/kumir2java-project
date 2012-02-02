@@ -43,8 +43,8 @@ public class ConstantsTableRow {
         m_constantID = m_constantIDCount;
         m_constantIDCount++;
     }
-    
-        public ConstantsTableRow(int loc, String type, Object value) {
+
+    public ConstantsTableRow(int loc, String type, Object value) {
         m_locations = new ArrayList();
         m_locations.add(Integer.valueOf(loc));
         m_typeOfConstant = type;
@@ -59,19 +59,22 @@ public class ConstantsTableRow {
     public ArrayList<Integer> getLocation() {
         return m_locations;
     }
-    
-    
-    public Integer getLowestLocation(){
+
+    public void setID(int id) {
+        m_constantID = id;
+    }
+
+    public Integer getLowestLocation() {
         Integer result = null;
         int lowest = m_locations.get(0);
-        for (Integer inte : m_locations){
-            if (inte.intValue() < lowest){
+        for (Integer inte : m_locations) {
+            if (inte.intValue() < lowest) {
                 lowest = inte.intValue();
             }
         }
-        
+
         result = Integer.valueOf(lowest);
-        
+
         return result;
     }
     /*
@@ -81,20 +84,23 @@ public class ConstantsTableRow {
     public String getType() {
         return m_typeOfConstant;
     }
+   
+    
     /*
      * Возвращает значение константы (может быть преобразовано в любой тип)
      */
-
+    
     public Object getValue() {
         return m_value;
+    }
+
+    public String getStringValue() {
+        return m_value.toString();
     }
     /*
      * Возвращает ID константы в таблице констант
      */
 
-          public void setID(int id) {
-        m_constantID = id;
-    }
     public int getID() {
         return m_constantID;
     }
@@ -138,17 +144,15 @@ public class ConstantsTableRow {
         if (m_locations != null) {
             Iterator it = m_locations.iterator();
             while (it.hasNext()) {
-               Integer inte =(Integer) it.next();
+                Integer inte = (Integer) it.next();
                 numRows += inte.toString() + ",";
                 set.add(inte);
             }
-            if (numRows.length()>0)
+            if (numRows.length() > 0) {
                 numRows = numRows.substring(0, numRows.length() - 1);
+            }
         }
-        
+
         System.out.printf("|%d|%s|%s|%s|\n", m_constantID, numRows, m_typeOfConstant, m_value.toString());
     }
-   
-    
-    
 }

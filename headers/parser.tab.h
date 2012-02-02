@@ -66,20 +66,19 @@
      CEL = 283,
      CELTAB = 284,
      ENDL = 285,
-     BOGUS = 286,
-     ASSMNT = 287,
-     EQ = 288,
-     NEQ = 289,
-     LTEQ = 290,
-     GTEQ = 291,
-     LT = 292,
-     GT = 293,
-     MINUS = 294,
-     PLUS = 295,
-     DIV = 296,
-     MUL = 297,
-     POW = 298,
-     UMINUS = 299
+     ASSMNT = 286,
+     EQ = 287,
+     NEQ = 288,
+     LTEQ = 289,
+     GTEQ = 290,
+     LT = 291,
+     GT = 292,
+     MINUS = 293,
+     PLUS = 294,
+     DIV = 295,
+     MUL = 296,
+     POW = 297,
+     UMINUS = 298
    };
 #endif
 

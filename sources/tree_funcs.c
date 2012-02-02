@@ -225,7 +225,9 @@ void makeNode(char* from, char* to)
         fprintf(dotfile, "\n%s", temp);
 
         fprintf(locsfile,fromWithoutQuotes);
-        fprintf(locsfile," ");
+        char _0x1F[2];
+        _0x1F[0] = '\x1F';
+        fprintf(locsfile,_0x1F);
         char buf[10]= {};
         sprintf(buf, "%d", yylloc.first_line);
         fprintf(locsfile, buf);
@@ -676,7 +678,9 @@ struct NExpr* create_const_expr (enum Const_type type, union Const_values value)
         sprintf(buf, "%d", value.Int);
 
         fprintf(locsfile, buf);
-        fprintf(locsfile," ");
+        char _0x1F[2];
+        _0x1F[0] = '\x1F';
+        fprintf(locsfile,_0x1F);
         char buf2[10]= {};
         sprintf(buf2, "%d", yylloc.first_line);
         fprintf(locsfile, buf2);
@@ -698,7 +702,9 @@ struct NExpr* create_const_expr (enum Const_type type, union Const_values value)
         strcpy(expr->val.Bool, value.Bool);
 
         fprintf(locsfile, value.Bool);
-        fprintf(locsfile," ");
+        char _0x1F[2];
+        _0x1F[0] = '\x1F';
+        fprintf(locsfile,_0x1F);
         char buf[10]= {};
         sprintf(buf, "%d", yylloc.first_line);
         fprintf(locsfile, buf);
@@ -720,7 +726,9 @@ struct NExpr* create_const_expr (enum Const_type type, union Const_values value)
         sscanf(buf, "%f", value.Double);
 
         fprintf(locsfile, buf);
-        fprintf(locsfile," ");
+        char _0x1F[2];
+        _0x1F[0] = '\x1F';
+        fprintf(locsfile,_0x1F);
         char buf2[10]= {};
         sprintf(buf2, "%d", yylloc.first_line);
         fprintf(locsfile, buf2);
@@ -747,7 +755,9 @@ struct NExpr* create_const_expr (enum Const_type type, union Const_values value)
         sprintf(buf0, "\"%s\"", value.Char);
         fprintf(locsfile, buf0);
 
-        fprintf(locsfile," ");
+        char _0x1F[2];
+        _0x1F[0] = '\x1F';
+        fprintf(locsfile,_0x1F);
         char buf[10]= {};
         sprintf(buf, "%d", yylloc.first_line);
         fprintf(locsfile, buf);
@@ -773,10 +783,12 @@ struct NExpr* create_const_expr (enum Const_type type, union Const_values value)
         expr->const_type = String;
         expr->val.String = value.String;
 
-        char buf0[10]= {};
+        char buf0[1024]= {};
         sprintf(buf0, "\"%s\"", value.String);
         fprintf(locsfile, buf0);
-        fprintf(locsfile," ");
+        char _0x1F[2];
+        _0x1F[0] = '\x1F';
+        fprintf(locsfile,_0x1F);
         char buf[10]= {};
         sprintf(buf, "%d", yylloc.first_line);
         fprintf(locsfile, buf);
@@ -798,7 +810,9 @@ struct NExpr* create_const_expr (enum Const_type type, union Const_values value)
         expr->print_val = (char*)safeAlloc(ALLOC_SZ);
 
         fprintf(locsfile, value.Id);
-        fprintf(locsfile," ");
+        char _0x1F[2];
+        /*_0x1F[0] = '\x1F';
+        fprintf(locsfile,_0x1F);*/
         char buf[10]= {};
         sprintf(buf, "%d", yylloc.first_line);
         fprintf(locsfile, buf);
@@ -961,7 +975,9 @@ struct NIdentifier* create_ident(char* id)
     strcpy(ident->name, id);
 
     fprintf(locsfile, ident->name);
-    fprintf(locsfile," ");
+    char _0x1F[2];
+    _0x1F[0] = '\x1F';
+    fprintf(locsfile,_0x1F);
     char buf[10]= {};
     sprintf(buf, "%d", yylloc.first_line);
     fprintf(locsfile, buf);

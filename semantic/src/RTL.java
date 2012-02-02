@@ -20,4 +20,8 @@ public class RTL {
     public static void ku_println() {
         System.out.println();
     }
+    
+    public static int ku_pow(int base, int exp){
+        return (int)Math.pow((double)base, (double)exp);
+    }
 }

@@ -139,7 +139,8 @@ public class ConstantsTable {
                 if (row.getType().equals(type)) {
                     int id = Integer.valueOf((String) row.getValue()).intValue();
                     ConstantsTableRow tempRow = Semantic.constantsTable.getRowById(id);
-                    if (((String) tempRow.getValue()).equals(name)) {
+                    String altName = tempRow.getStringValue();
+                    if (altName.equals(name)) {
                         result = row;
                         break;
                     }
@@ -162,7 +163,19 @@ public class ConstantsTable {
 
     public void removeRow(int id) {
         rows.remove(this.getRowById(id));
+    }
 
+    public void emptyingRow(ConstantsTableRow row) {
+        row.setLocations(new ArrayList());
+        row.setType("UTF-8");
+        row.setValue("empty");
+    }
+
+    public void emptyingRow(int id) {
+        ConstantsTableRow row = getRowById(id);
+        row.setLocations(new ArrayList());
+        row.setType("UTF-8");
+        row.setValue("empty");
     }
 
     public int getCount() {

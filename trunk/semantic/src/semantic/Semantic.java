@@ -76,8 +76,8 @@ public class Semantic {
         multipleLocations = new HashMap();
         String[] rows = fileContentLoc.split("\r\n");
         for (int i = 0; i < rows.length; i++) {
-            String str1 = rows[i].split(" ")[0];
-            String str2 = rows[i].split(" ")[1];
+            String str1 = rows[i].split("\\x{1F}")[0];
+            String str2 = rows[i].split("\\x{1F}")[1];
             str1 = str1.trim();
             str2 = str2.trim();
             if (str1.length() > 0) {
@@ -258,22 +258,36 @@ public class Semantic {
                  */
             } else {
                 String value;
-                value = str_in.substring(tempInt + 1, str_in.length());
-                value = value.trim();
+                value = str_in.substring(tempInt + 2, str_in.length());
+                //
                 if (!consts.contains(value)) {
                     consts.add(value);
                 }
                 if (describe.equals("Целая константа") || describe.equals("Целое число")) {
                     result.addAttribute("TYPE", "цел");
-
+                    value = value.trim();
                 } else if (describe.equals("Вещественная константа")) {
                     result.addAttribute("TYPE", "вещ");
+                    value = value.trim();
                 } else if (describe.equals("Логическая константа")) {
                     result.addAttribute("TYPE", "лог");
                 } else if (describe.equals("Строковая константа")) {
                     result.addAttribute("TYPE", "лит");
                 } else if (describe.equals("Символьная константа")) {
                     result.addAttribute("TYPE", "сим");
+                }
+
+                // проверка - если данная строка - нс, то обрезать лишние знаки
+                // по бокам
+                String testNS = value.replaceAll("нс", " ");
+                boolean testNSBool = true;
+                for (int i = 0; i < testNS.length(); i++) {
+                    if (testNS.charAt(i) != ' ') {
+                        testNSBool = false;
+                    }
+                }
+                if (testNSBool) {
+                    value = value.trim();
                 }
 
                 //result.addAttribute("NAME", value);
@@ -1362,7 +1376,8 @@ public class Semantic {
             Iterator itParent = tempVx.getParentList().iterator();
             while (itParent.hasNext()) {
                 Vertex vx = (Vertex) itParent.next();
-                if (vx.getParentList().get(0).getAttribute("NAME").equals("create_func")) {
+                if (vx.getParentList().get(0).getAttribute("NAME").equals("create_func")
+                        || vx.getParentList().get(0).getAttribute("NAME").equals("create_proc")) {
                     tempVx = vx;
                 }
             }
@@ -1523,6 +1538,7 @@ public class Semantic {
         makeMethodRef(classID, "ku_println", "(I)V");
         makeMethodRef(classID, "ku_println", "(Ljava/lang/String;)V");
         makeMethodRef(classID, "ku_println", "()V");
+        makeMethodRef(classID, "ku_pow", "(II)I");
 
     }
 
@@ -1851,7 +1867,7 @@ public class Semantic {
 
 
         for (Integer inte : toDelete) {
-            constantsTable.removeRow(inte.intValue());
+            constantsTable.emptyingRow(inte.intValue());
         }
 
     }
@@ -1902,9 +1918,6 @@ public class Semantic {
         fpTable = new FPTable();
         bytecodeBuffer = new HashMap();
         //  filename = "..\\unittests\\procsAndFuncs1.dot";
-        filename = "..\\unittests\\procsAndFuncs1.dot";
-        filenameLoc = filename.substring(0, filename.length() - 4).concat(".loc");
-        filenameKum = filename.substring(0, filename.length() - 4).concat(".kum");
 
         readFile(filename);
         readLocFile(filenameLoc);
@@ -2078,11 +2091,21 @@ public class Semantic {
 
     public static void main(String[] args) {
 
+        if (args.length == 1) {
+            filename = args[0];
+            filenameLoc = filename.substring(0, filename.length() - 4).concat(".loc");
+            filenameKum = filename.substring(0, filename.length() - 4).concat(".kum");
+        } else {
+            filename = "..\\unittests\\procsAndFuncs1.dot";
+            filenameLoc = filename.substring(0, filename.length() - 4).concat(".loc");
+            filenameKum = filename.substring(0, filename.length() - 4).concat(".kum");
+
+        }
+
         init();
         populateTypes();
         //     checks();
         cutLocalsFromConstants();
-
 
 
         try {
@@ -2091,17 +2114,18 @@ public class Semantic {
             Logger.getLogger(Semantic.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        
-          System.out.print("Таблица констант:\n"); constantsTable.printTable();
-         // System.out.print("\nТаблица функций:\n"); fpTable.printTable();
-        //  System.out.print("\nТаблица локальных переменных:\n");
-         //localsTable.printTable();
-          //processParamListOnTables();
-         
+
+        System.out.print("Таблица констант:\n");
+        constantsTable.printTable();
+        // System.out.print("\nТаблица функций:\n"); fpTable.printTable();
+        System.out.print("\nТаблица локальных переменных:\n");
+        localsTable.printTable();
+        //processParamListOnTables();
+
 
 
         // transformTree();
-        //g.printInfo();
+        // g.printInfo();
 
 
         if (allRight == true) {

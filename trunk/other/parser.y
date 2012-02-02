@@ -104,7 +104,6 @@ extern int yylex(void);
 %token LIT LITTAB LOG LOGTAB NACH NET NS
 %token REZ SIM SIMTAB CEL CELTAB
 %token ENDL
-%token BOGUS
 
 %right ASSMNT
 %left GT LT GTEQ LTEQ NEQ EQ
@@ -215,6 +214,11 @@ function_call                {$$=create_function_call_expr($1);
                               $$=create_const_expr(Bool, value);
                              }
 | MINUS expr %prec UMINUS    {$$ = create_unary(UNARY, $2); }
+
+| NS                         {union Const_values value;
+                              value.String = (char*)safeAlloc(3);
+                              strcpy(value.String,"нс");
+                              $$=create_const_expr(String, value);}
 ;
 
 

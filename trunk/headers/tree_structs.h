@@ -15,7 +15,7 @@
 
 #define OUT2DOT 1
 #define ALLOC_SZ 512
-#define POOL_ARRAY_SZ 1500
+#define POOL_ARRAY_SZ 2500
 #define HASH_ARRAY_SZ 1000
 
 char* before_val;

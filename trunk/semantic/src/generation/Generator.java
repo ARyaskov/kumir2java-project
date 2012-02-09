@@ -15,18 +15,36 @@ import semantic.*;
 
 public class Generator {
 
+    String curMethod = "";
     private DataOutputStream m_output;
     private short OPERAND_STACK_SIZE = 2048;
     private ByteBuffer m_commands;
     private Stack m_idStack;
+    private Stack m_typeStack;
+    private boolean reverseFlag = true;
+    private Stack m_arraySizesStack;
+    private String m_currentDeclType;
+    private Stack m_idDeclStack;
+    private byte T_BOOLEAN = 4;
+    private byte T_CHAR = 5;
+    private byte T_DOUBLE = 7;
+    private byte T_BYTE = 8;
+    private byte T_INT = 10;
+    private Stack m_callingFunctionStack;
+    private String curZnachType;
 
     public Generator(String filename) {
         try {
             m_output = new DataOutputStream(
                     new BufferedOutputStream(
                     new FileOutputStream(filename)));
-            m_commands = ByteBuffer.allocate(100);
+            m_commands = ByteBuffer.allocate(2048);
             m_idStack = new Stack();
+            m_typeStack = new Stack();
+            m_arraySizesStack = new Stack();
+            m_idDeclStack = new Stack();
+            m_callingFunctionStack = new Stack();
+            curZnachType = "";
         } catch (FileNotFoundException ex) {
             Logger.getLogger(Generator.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -390,64 +408,6 @@ public class Generator {
 
     }
 
-    public void generateFunc(Vertex vx) {
-        String nameOfFun = vx.getChildList().get(0).getChildList().get(0).getAttribute("NAME");
-        if (Semantic.fpTable.getSize() > 1) {
-        } else if (Semantic.fpTable.getSize() == 1) {
-            nameOfFun = "main";
-
-
-
-        } else if (Semantic.fpTable.getSize() == 0) {
-        }
-
-        m_commands.put(CG.RETURN);
-        Semantic.bytecodeBuffer.put(nameOfFun, m_commands);
-
-    }
-
-    public void generatePrintExpr(Vertex vx) {
-    }
-
-    public void generateAssmntExpr(Vertex vx, String methodName) {
-        Vertex right = vx.getChildByOrder(1);
-        Vertex left = vx.getChildByOrder(0);
-
-        m_commands = ByteBuffer.allocate(100);
-
-        if (right.getAttribute("TYPE").equals("цел")) {
-            int val = Integer.valueOf(right.getAttribute("NAME")).intValue();
-            if (val >= -32768 && val < 32768) {
-                m_commands.put(CG.SIPUSH);
-                m_commands.putShort((short) val);
-                m_commands.put(CG.ISTORE);
-                String numOfLocal = left.getLastDescendant().getAttribute("LOCAL_" + methodName);
-                m_commands.putShort(Integer.valueOf(numOfLocal).shortValue());
-
-            } else {// ищем в таблице констант
-                ConstantsTableRow row = Semantic.constantsTable.getRowByVal(val);
-                int id = row.getID();
-                m_commands.put(CG.LDC_W);
-                m_commands.putShort((short) id);
-
-                m_commands.put(CG.ISTORE);
-                String numOfLocal = left.getLastDescendant().getAttribute("LOCAL_" + methodName);
-                m_commands.putShort(Integer.valueOf(numOfLocal).shortValue());
-            }
-
-        }
-
-    }
-
-    public void generatePlusExpr(Vertex vx, String methodName) {
-        /*
-         * Vertex right = vx.getChildByOrder(1); Vertex left =
-         * vx.getChildByOrder(0);
-         *
-         * if (left.getAttribute(methodName))
-         */
-    }
-
     public static short findIdForNameAndType(String name, String descr) {
         short result = -1;
 
@@ -476,257 +436,970 @@ public class Generator {
         return methodRefID.shortValue();
     }
 
-    public void giantSwitch() {
+    public void pushIntOnStack(String intInString) {
+        int casted = Integer.valueOf(intInString).intValue();
 
-        m_commands = ByteBuffer.allocate(1000);
-        String curMethod = null;
-        boolean isPrepareForAssmnt = false;
-        for (int m = 0; m < Semantic.g.getSize(); m++) {
-            Vertex vx = (Vertex) Semantic.g.getVertexByOrder(m);
-            String vxType = vx.getAttribute("NAME");
-            switch (vxType) {
-                case "create_ident": {
-                    if (vx.getParentList().get(0).getAttribute("NAME").equals("create_proc")
-                            || vx.getParentList().get(0).getAttribute("NAME").equals("create_func")) {
-                        curMethod = vx.getChildList().get(0).getAttribute("NAME");
-                    } else if (vx.getParentList().get(0).getAttribute("NAME").equals("create_enum_atomic_identifier_list")) {
-                    } else {
+        if (casted >= -32768 && casted <= 32767) {
+            if (casted >= -128 && casted <= 127) {
+                m_commands.put(CG.BIPUSH);
+                m_commands.put((byte) casted);
+            } else {
+                m_commands.put(CG.SIPUSH);
+                m_commands.putShort((short) casted);
+            }
+        } else {
+            int _id = Semantic.constantsTable.getRowByTypeAndName("INT", intInString).getID();
+            m_commands.put(CG.LDC_W);
+            m_commands.putShort((short) _id);
+        }
+
+    }
+
+    public void pushIntVarOnStack(String name) {
+
+        int funId = Semantic.fpTable.getRowByName(curMethod).getID();
+        int id = Semantic.localsTable.getRowByFunIDAndName(funId, name).getID();
+
+        m_commands.put(CG.LDC_W);
+        m_commands.putShort((short) id);
 
 
-                        String name =
-                                vx.getChildByOrder(0).getAttribute("NAME");
 
-                        int id =
-                                Integer.valueOf(Semantic.localsTable.getRowByName(name).getID()).shortValue();
-                        m_idStack.push(id);
+    }
+
+    public void pushStringOnStack(String name) {
+
+        int id = Semantic.constantsTable.getRowByTypeAndName("String", name).getID();
+
+        m_commands.put(CG.LDC_W);
+        m_commands.putShort((short) id);
 
 
-                    }
-                }
-                break;
-                case "+": {
-                    for (int i = 0; i < 2; i++) {
-                        Vertex tempVx = vx.getChildByOrder(i);
-                        if (tempVx.getAttribute("NAME").equals("create_expr_id")) {
-                            Vertex idVx = vx.getChildByOrder(i).getLastDescendant();
-                            String name = idVx.getAttribute("NAME");
-                            int idCT = Semantic.constantsTable.getRowByName(name).getID();
-                            m_commands.put(CG.LDC_W);
-                            m_commands.putShort((short) idCT);
+    }
 
-                        } else if (vx.getChildByOrder(i).getAttribute("ID").equals("-1")) {
-                            String val = vx.getChildByOrder(i).getAttribute("NAME");
-                            int intVal = Integer.valueOf(val);
-                            if (intVal >= -32768 && intVal < 32768) {
-                                m_commands.put(CG.SIPUSH);
-                                m_commands.putShort((short) intVal);
-                            } else {// ищем в таблице констант
-                                ConstantsTableRow row = Semantic.constantsTable.getRowByName(val);
-                                int id = row.getID();
-                                m_commands.put(CG.LDC_W);
-                                m_commands.putShort((short) id);
-                            }
-                        }
-                    }
+    public void pushCharOnStack(String name) {
 
-                    m_commands.put(CG.IADD);
-                }
-                break;
-                case "-": {
-                    for (int i = 0; i < 2; i++) {
-                        Vertex tempVx = vx.getChildByOrder(i);
-                        if (tempVx.getAttribute("NAME").equals("create_expr_id")) {
-                            Vertex idVx = vx.getChildByOrder(i).getLastDescendant();
-                            String name = idVx.getAttribute("NAME");
-                            int idCT = Semantic.constantsTable.getRowByName(name).getID();
-                            m_commands.put(CG.LDC_W);
-                            m_commands.putShort((short) idCT);
 
-                        } else if (vx.getChildByOrder(i).getAttribute("ID").equals("-1")) {
-                            String val = vx.getChildByOrder(i).getAttribute("NAME");
-                            int intVal = Integer.valueOf(val);
-                            if (intVal >= -32768 && intVal < 32768) {
-                                m_commands.put(CG.SIPUSH);
-                                m_commands.putShort((short) intVal);
-                            } else {// ищем в таблице констант
-                                ConstantsTableRow row = Semantic.constantsTable.getRowByName(val);
-                                int id = row.getID();
-                                m_commands.put(CG.LDC_W);
-                                m_commands.putShort((short) id);
-                            }
-                        }
-                    }
+        char code = name.charAt(0);
 
-                    m_commands.put(CG.ISUB);
-                }
-                case "*": {
-                    for (int i = 0; i < 2; i++) {
-                        Vertex tempVx = vx.getChildByOrder(i);
-                        if (tempVx.getAttribute("NAME").equals("create_expr_id")) {
-                            Vertex idVx = vx.getChildByOrder(i).getLastDescendant();
-                            String name = idVx.getAttribute("NAME");
-                            int idCT = Semantic.constantsTable.getRowByName(name).getID();
-                            m_commands.put(CG.LDC_W);
-                            m_commands.putShort((short) idCT);
+        m_commands.put(CG.SIPUSH);
+        m_commands.putShort((short) code);
+        //  m_commands.put(CG.I2C);
+    }
 
-                        } else if (vx.getChildByOrder(i).getAttribute("ID").equals("-1")) {
-                            String val = vx.getChildByOrder(i).getAttribute("NAME");
-                            int intVal = Integer.valueOf(val);
-                            if (intVal >= -32768 && intVal < 32768) {
-                                m_commands.put(CG.SIPUSH);
-                                m_commands.putShort((short) intVal);
-                            } else {// ищем в таблице констант
-                                ConstantsTableRow row = Semantic.constantsTable.getRowByName(val);
-                                int id = row.getID();
-                                m_commands.put(CG.LDC_W);
-                                m_commands.putShort((short) id);
-                            }
-                        }
+    public void loadAFromLocalVar(byte id) {
+        if (id == 0) {
+            m_commands.put(CG.ALOAD_0);
+        } else if (id == 1) {
+            m_commands.put(CG.ALOAD_1);
+        } else if (id == 2) {
+            m_commands.put(CG.ALOAD_2);
+        } else if (id == 3) {
+            m_commands.put(CG.ALOAD_3);
+        } else {
+            m_commands.put(CG.ALOAD);
+            m_commands.put(id);
+        }
+    }
+
+    public String translateType(String inType) {
+        String result = inType;
+
+        if (inType.equals("I")) {
+            result = "INT";
+        } else if (inType.equals("D")) {
+            result = "DOUBLE";
+        } else if (inType.equals("C")) {
+            result = "CHAR";
+        } else if (inType.equals("Z")) {
+            result = "BOOLEAN";
+        } else if (inType.equals("Ljava/lang/String;")) {
+            result = "String";
+        } else {
+
+            switch (inType) {
+                case "лит":
+                    result = "String";
+                    break;
+                case "цел":
+                    result = "INT";
+                    break;
+                case "вещ":
+                    result = "DOUBLE";
+                    break;
+                case "лог":
+                    result = "BOOLEAN";
+                    break;
+                case "сим":
+                    result = "CHAR";
+                    break;
+                default:
+                    if (inType.equals("String") != true
+                            && inType.equals("INT") != true
+                            && inType.equals("DOUBLE") != true
+                            && inType.equals("BOOLEAN") != true
+                            && inType.equals("CHAR") != true) {
+                        result = "unknown type";
                     }
 
-                    m_commands.put(CG.IMUL);
-                }
-                break;
-                case "/": {
-                    for (int i = 0; i < 2; i++) {
-                        Vertex tempVx = vx.getChildByOrder(i);
-                        if (tempVx.getAttribute("NAME").equals("create_expr_id")) {
-                            Vertex idVx = vx.getChildByOrder(i).getLastDescendant();
-                            String name = idVx.getAttribute("NAME");
-                            int idCT = Semantic.constantsTable.getRowByName(name).getID();
-                            m_commands.put(CG.LDC_W);
-                            m_commands.putShort((short) idCT);
+            }
+        }
+        return result;
+    }
 
-                        } else if (vx.getChildByOrder(i).getAttribute("ID").equals("-1")) {
-                            String val = vx.getChildByOrder(i).getAttribute("NAME");
-                            int intVal = Integer.valueOf(val);
-                            if (intVal >= -32768 && intVal < 32768) {
-                                m_commands.put(CG.SIPUSH);
-                                m_commands.putShort((short) intVal);
-                            } else {// ищем в таблице констант
-                                ConstantsTableRow row = Semantic.constantsTable.getRowByName(val);
-                                int id = row.getID();
-                                m_commands.put(CG.LDC_W);
-                                m_commands.putShort((short) id);
-                            }
-                        }
+    public Stack reverseStack(Stack stck) {
+        Stack result = new Stack();
+        while (stck.empty()) {
+            result.push(stck.pop());
+        }
+        return result;
+
+
+    }
+
+    public void recursive(Vertex vx) {
+
+        if (vx == null) {
+            return;
+        }
+        /*
+         * if (vx.getAttribute("NAME").equals("create_expr_list") &&
+         * vx.getParentList().get(0).getAttribute("NAME").equals("create_expr_list_print"))
+         * { for (int i = vx.getChildList().size()-1; i >= 0; i--) { Vertex
+         * vxNow = vx.getChildByOrder(i); recursive(vxNow); } } else {
+         */
+        for (int i = 0; i < vx.getChildList().size(); i++) {
+            Vertex vxNow = vx.getChildByOrder(i);
+            recursive(vxNow);
+        }
+        /*
+         * }
+         */
+        giantSwitch(vx);
+
+    }
+    int _glCount = 0;
+
+    public void specialForPrintExprList() {
+        short idMethodRef = 0;
+        /*
+         * System.out.printf("\n%d) %s\n", _glCount++, m_typeStack.toString());
+         */
+        String type = m_typeStack.pop().toString();
+
+        if (type.equals("INT")) {
+            idMethodRef = findIdForMethodRef("RTL", "ku_print", "(I)V");
+        } else if (type.equals("CHAR")) {
+            idMethodRef = findIdForMethodRef("RTL", "ku_print", "(C)V");
+        } else if (type.equals("BOOLEAN")) {
+            idMethodRef = findIdForMethodRef("RTL", "ku_print", "(Z)V");
+        } else if (type.equals("String")) {
+            idMethodRef = findIdForMethodRef("RTL", "ku_print", "(Ljava/lang/String;)V");
+        } else if (type.equals("DOUBLE")) {
+            idMethodRef = findIdForMethodRef("RTL", "ku_print", "(D)V");
+        } else if (type.equals("NS")) {
+            idMethodRef = findIdForMethodRef("RTL", "ku_println", "()V");
+        }
+        m_commands.put(CG.INVOKESTATIC);
+        m_commands.putShort(idMethodRef);
+    }
+
+    public void loadValueFromLocalVar(byte id) {
+        String type = m_typeStack.pop().toString();
+        type = translateType(type);
+
+        switch (type) {
+            case "INT": {
+                switch (id) {
+                    case 0: {
+                        m_commands.put(CG.ILOAD_0);
+                    }
+                    break;
+                    case 1: {
+                        m_commands.put(CG.ILOAD_1);
+                    }
+                    break;
+                    case 2: {
+                        m_commands.put(CG.ILOAD_2);
+                    }
+                    break;
+                    case 3: {
+                        m_commands.put(CG.ILOAD_3);
+                    }
+                    break;
+                    default: {
+                        m_commands.put(CG.ILOAD);
+                        m_commands.put(id);
                     }
 
-                    m_commands.put(CG.IDIV);
                 }
-                break;
-                case "**": {
-                    for (int i = 0; i < 2; i++) {
-                        Vertex tempVx = vx.getChildByOrder(i);
-                        if (tempVx.getAttribute("NAME").equals("create_expr_id")) {
-                            Vertex idVx = vx.getChildByOrder(i).getLastDescendant();
-                            String name = idVx.getAttribute("NAME");
-                            int idCT = Semantic.constantsTable.getRowByName(name).getID();
-                            m_commands.put(CG.LDC_W);
-                            m_commands.putShort((short) idCT);
 
-                        } else if (vx.getChildByOrder(i).getAttribute("ID").equals("-1")) {
-                            String val = vx.getChildByOrder(i).getAttribute("NAME");
-                            int intVal = Integer.valueOf(val);
-                            if (intVal >= -32768 && intVal < 32768) {
-                                m_commands.put(CG.SIPUSH);
-                                m_commands.putShort((short) intVal);
+            }
+            break;
 
-                            } else {// ищем в таблице констант
-                                ConstantsTableRow row = Semantic.constantsTable.getRowByName(val);
-                                int id = row.getID();
-                                m_commands.put(CG.LDC_W);
-                                m_commands.putShort((short) id);
-
-                            }
-                        }
+            case "String": {
+                switch (id) {
+                    case 0: {
+                        m_commands.put(CG.ALOAD_0);
                     }
-                    m_commands.put(CG.INVOKESTATIC);
-                    int idMethodRef = findIdForMethodRef("RTL", "ku_pow", "(II)I");
-                    m_commands.putShort((short) idMethodRef);
-
-                }
-                break;
-                case ":=": {
-
-                    if (vx.getParentList().get(0).getAttribute("NAME").equals(":=")) {
-                        m_commands.put(CG.DUP);
+                    break;
+                    case 1: {
+                        m_commands.put(CG.ALOAD_1);
                     }
-                    m_commands.put(CG.ISTORE);
-                    int id = (int) m_idStack.pop();
-                    m_commands.put((byte) id);
+                    break;
+                    case 2: {
+                        m_commands.put(CG.ALOAD_2);
+                    }
+                    break;
+                    case 3: {
+                        m_commands.put(CG.ALOAD_3);
+                    }
+                    break;
+                    default: {
+                        m_commands.put(CG.ALOAD);
+                        m_commands.put(id);
+                    }
 
                 }
-                break;
 
-                case "create_expr_list_print": {
-                    short idMethodRef = 0;
-                    int childsCount = vx.getChildByOrder(0).getChildList().size();
+            }
+            break;
+            case "DOUBLE": {
+                switch (id) {
+                    case 0: {
+                        m_commands.put(CG.DLOAD_0);
+                    }
+                    break;
+                    case 1: {
+                        m_commands.put(CG.DLOAD_1);
+                    }
+                    break;
+                    case 2: {
+                        m_commands.put(CG.DLOAD_2);
+                    }
+                    break;
+                    case 3: {
+                        m_commands.put(CG.DLOAD_3);
+                    }
+                    break;
+                    default: {
+                        m_commands.put(CG.DLOAD);
+                        m_commands.put(id);
+                    }
 
-                    for (int j = 0; j < childsCount; j++) {
-                        Vertex vxNow = vx.getChildByOrder(0).getChildByOrder(j);
+                }
 
-                        if (vxNow.getAttribute("NAME").equals("append_expr_to_list")) {
-                            vxNow = vx.getChildByOrder(0).getChildByOrder(j).getChildByOrder(0);
-                        }
-                        int id = 0;
-                        if (vxNow.getAttribute("NAME").equals("create_expr_id")) {
-                            vxNow = vxNow.getChildByOrder(0).getChildByOrder(0);
-                        }
-
-                        String type = vxNow.getAttribute("TYPE");
-                        String whatPrint = vxNow.getAttribute("NAME");
-                        if (vxNow.getTypeOfSymbol().equals("ID")) {
-                            id = Semantic.localsTable.getRowByName(whatPrint).getID();
-                            m_commands.put(CG.ILOAD);
-                            m_commands.put((byte) id);
-                        }
-                        if (type.equals("цел")) {
-                            idMethodRef = findIdForMethodRef("RTL", "ku_print", "(I)V");
-                        } else if (type.equals("лит") && whatPrint.equals("нс")) {
-                            idMethodRef = findIdForMethodRef("RTL", "ku_println", "()V");
-                        } else if (type.equals("лит")) {
-                            short idWhatPrint = (short) Semantic.constantsTable.getRowByTypeAndName("String", whatPrint).getID();
-                            m_commands.put(CG.LDC_W);
-                            m_commands.putShort(idWhatPrint);
-                            idMethodRef = findIdForMethodRef("RTL", "ku_print", "(Ljava/lang/String;)V");
-                        }
-                        m_commands.put(CG.INVOKESTATIC);
-                        m_commands.putShort(idMethodRef);
+            }
+            break;
+            case "CHAR": {
+                switch (id) {
+                    case 0: {
+                        m_commands.put(CG.ILOAD_0);
+                        //  m_commands.put(CG.I2C);
+                    }
+                    break;
+                    case 1: {
+                        m_commands.put(CG.ILOAD_1);
+                        //  m_commands.put(CG.I2C);
+                    }
+                    break;
+                    case 2: {
+                        m_commands.put(CG.ILOAD_2);
+                        // m_commands.put(CG.I2C);
+                    }
+                    break;
+                    case 3: {
+                        m_commands.put(CG.ILOAD_3);
+                        // m_commands.put(CG.I2C);
 
                     }
-                }
-                break;
-                case "create_proc": {
-                    m_commands.put(CG.RETURN);
-                    Semantic.bytecodeBuffer.put(curMethod, m_commands);
-                }
-                break;
-                case "create_func": {
-                    m_commands.put(CG.RETURN);
-                    Semantic.bytecodeBuffer.put(curMethod, m_commands);
-                }
-                break;
-                default: {
+                    break;
+                    default: {
+                        m_commands.put(CG.ILOAD);
+                        m_commands.put(id);
+                        //  m_commands.put(CG.I2C);
+                    }
 
-                    /*
-                     * if (vx.containsAttribute("TYPE")) { if
-                     * (vx.getAttribute("TYPE") != null &&
-                     * vx.getAttribute("TYPE").equals("цел")) { String val =
-                     * vx.getAttribute("NAME"); int intVal =
-                     * Integer.valueOf(val); if (intVal >= -32768 && intVal <
-                     * 32768) { m_commands.put(CG.SIPUSH);
-                     * m_commands.putShort((short) intVal); } else {
-                     * ConstantsTableRow row =
-                     * Semantic.constantsTable.getRowByName(val); int id =
-                     * row.getID(); m_commands.put(CG.LDC_W);
-                     * m_commands.putShort((short) id); } } }
-                     */
                 }
+
+            }
+            break;
+        }
+    }
+
+    public boolean isArrayType(String type) {
+        boolean result = false;
+        if (type != null) {
+            if (type.indexOf("целтаб") != -1) {
+                result = true;
+            } else if (type.indexOf("вещтаб") != -1) {
+                result = true;
+            } else if (type.indexOf("логтаб") != -1) {
+                result = true;
+            } else if (type.indexOf("литтаб") != -1) {
+                result = true;
+            } else if (type.indexOf("симтаб") != -1) {
+                result = true;
             }
         }
 
 
+        return result;
+    }
+
+    public void generateArray() {
+    }
+
+    public void giantSwitch(Vertex vx) {
+
+
+        boolean isPrepareForAssmnt = false;
+
+
+        String vxName = vx.getAttribute("NAME");
+        String vxType = vx.getAttribute("TYPE");
+        String vxTypeOfSymbol = vx.getTypeOfSymbol();
+    
+        System.out.printf("%s - %s\n", vxName, m_typeStack.toString());
+        switch (vxName) {
+            default: {
+                if (vxName.equals("процедура")) {
+                    byte i = 1;
+                }
+                if (vxTypeOfSymbol.equals("TYPE")) {
+                    break;
+                }
+                if (vxType != null && vxTypeOfSymbol.equals("SIMPLE") && vxType.equals("цел")) {
+                    if (Semantic.isNumeric(vxName)) {
+
+                        String _parName = vx.getParentList().get(vx.enterNum).getAttribute("NAME");
+                        if (_parName.equals("create_int_int_dim") != true && _parName.equals("append_int_int_dim") != true) {
+
+                            pushIntOnStack(vxName);
+                            m_typeStack.add("INT");
+
+
+                        } else {
+                            int val = Integer.valueOf(vxName).intValue();
+                            if (val != 1) {
+                                m_arraySizesStack.push(val);
+                            }
+                        }
+                    }
+
+                    vx.enterNum++;
+                } else if (isArrayType(vxType) && vxTypeOfSymbol.equals("SIMPLE")) {
+                } else if (vxType != null && vxTypeOfSymbol.equals("SIMPLE") && vxType.equals("лит")) {
+
+
+                    if (vxName.equals("нс")) {
+                        m_typeStack.add("NS");
+                    } else {
+                        pushStringOnStack(vxName);
+                        m_typeStack.add("String");
+
+                    }
+                    String nameOf2Par = vx.generateNLevelParent(2).getAttribute("NAME");
+                    if (nameOf2Par.equals("create_expr_list_print") || nameOf2Par.equals("create_stmt_print")) {
+                        specialForPrintExprList();
+                    }
+
+                } else if (vxType != null && vxTypeOfSymbol.equals("SIMPLE") && vxType.equals("сим")) {
+
+
+
+                    pushCharOnStack(vxName);
+                    m_typeStack.add("CHAR");
+
+
+                    String nameOf2Par = vx.generateNLevelParent(2).getAttribute("NAME");
+                    if (nameOf2Par.equals("create_expr_list_print") || nameOf2Par.equals("create_stmt_print")) {
+                        specialForPrintExprList();
+                    }
+
+                } else if (vxType != null && vxTypeOfSymbol.equals("ID")) {
+                    m_idStack.push(vxName);
+                    m_typeStack.push(vxType);
+                } else if (vxTypeOfSymbol != null && vxTypeOfSymbol.equals("ID") && curMethod.isEmpty()) {
+                    m_idStack.push(vxName);
+                } else if (vxTypeOfSymbol != null && vxType != null && vxTypeOfSymbol.equals("ID") && vxType.equals("цел")) {
+                    m_idStack.push(vxName);
+                    m_typeStack.add("INT");
+                } else if (vxTypeOfSymbol != null && vxType != null && vxTypeOfSymbol.equals("ID") && vxType.equals("лит")) {
+                    m_idStack.push(vxName);
+                    m_typeStack.add("String");
+                } else if (vxTypeOfSymbol != null && vxType != null && vxTypeOfSymbol.equals("ID") && vxType.equals("сим")) {
+                    m_idStack.push(vxName);
+                    m_typeStack.add("CHAR");
+                } else if (vxTypeOfSymbol.equals("ID")) {
+                    m_idStack.push(vxName);
+                    Vertex _par = vx.getParentList().get(vx.enterNum);
+                    String _parName = _par.getParentList().get(0).getAttribute("NAME");
+                    if (curMethod.isEmpty() != true) {
+                        int funID = Semantic.fpTable.getRowByName(curMethod).getID();
+                        if (Semantic.fpTable.isIdentifierExists(vxName) != true) {
+                            String _type = Semantic.localsTable.getRowByFunIDAndName(funID, vxName).getType().toString();
+
+                            _type = translateType(_type);
+                            m_typeStack.push(_type);
+                        }
+                    }
+
+                    vx.enterNum++;
+                }
+
+
+            }
+            break;
+            case "create_znachvalue": {
+                curZnachType = m_typeStack.pop().toString();
+
+            }
+            break;
+            case "create_stmt_znach": {
+            }
+            break;
+            case "create_expr_list_print": {
+                /*
+                 * if (m_typeStack.empty() != true &&
+                 * m_typeStack.peek().toString().equals("NS")) {
+                 */
+                // specialForPrintExprList();
+                /*
+                 * }
+                 */
+            }
+            break;
+            case "create_int_int_dim": {
+            }
+            break;
+            case "create_stmt_decl": {
+            }
+            break;
+            case "append_stmt_to_list": {
+            }
+            break;
+            case "create_from_atomic_decl": {
+            }
+            break;
+            case "create_atomic_type": {
+            }
+            break;
+            case "create_enum_atomic_identifier_list": {
+                m_idDeclStack.clear();
+                m_typeStack.clear();
+            }
+            break;
+            case "append_enum_atomic_identifier_list": {
+            }
+            break;
+            case "create_expr_list": {
+                String nameOf1Par = vx.getParentList().get(vx.enterNum).getAttribute("NAME");
+                if (nameOf1Par.equals("[]:=")) {
+
+                    /*
+                     * m_commands.put(CG.ICONST_1); m_commands.put(CG.ISUB);
+                     */
+                    m_commands.put(CG.ICONST_1);
+                    m_commands.put(CG.ISUB);
+                    if (Semantic.getByVertexName(vx, "append_expr_to_list") != null) {
+                        m_commands.put(CG.AALOAD);
+                    } //else {
+                    //    m_commands.put(CG.IASTORE);
+                    //}
+                    //
+
+                } else if (nameOf1Par.equals("create_array_expr")) {
+                    m_commands.put(CG.ICONST_1);
+                    m_commands.put(CG.ISUB);
+                } else if (nameOf1Par.equals("create_expr_list_print") && m_typeStack.empty() != true) {
+                    specialForPrintExprList();
+                } else if (nameOf1Par.equals("create_function_call")) {
+                    // loadVarFromLocalVar();
+                }
+
+
+            }
+            break;
+            case "append_expr_to_list": {
+                String nameOf2Par = vx.getParentList().get(0).getParentList().get(0).getAttribute("NAME");
+                if (nameOf2Par.equals("create_expr_list_print") && m_typeStack.empty() != true) {
+                    specialForPrintExprList();
+                    m_typeStack.pop();
+                }
+                if (nameOf2Par.equals("create_function_call") && m_typeStack.empty() != true) {
+                }
+                if (nameOf2Par.equals("[]:=")) {
+                    m_commands.put(CG.ICONST_1);
+                    m_commands.put(CG.ISUB);
+                }
+            }
+            break;
+            case "create_stmt_print": {
+                // specialForPrintExprList();
+            }
+            break;
+            case "create_array_expr": {
+                m_commands.put(CG.IALOAD);
+                String nameOf2Par = vx.getParentList().get(0).getParentList().get(0).getAttribute("NAME");
+                String nameOf3Par = vx.generateNLevelParent(2).getAttribute("NAME");
+                if (nameOf2Par.equals("create_expr_list_print") || nameOf3Par.equals("create_expr_list_print")) {
+                    specialForPrintExprList();
+                    m_typeStack.pop();
+                }
+            }
+            break;
+            case "create_proc": {
+                m_commands.put(CG.RETURN);
+                Semantic.bytecodeBuffer.put(curMethod, m_commands);
+
+                curMethod = "";
+                m_commands = ByteBuffer.allocate(2048);
+
+
+            }
+            break;
+            case "create_func": {
+                if (curZnachType.equals("INT")) {
+                    m_commands.put(CG.IRETURN);
+                } else if (curZnachType.equals("DOUBLE")) {
+                    m_commands.put(CG.DRETURN);
+                } else if (curZnachType.equals("CHAR")) {
+                    m_commands.put(CG.IRETURN);
+                } else if (curZnachType.equals("BOOLEAN")) {
+                    m_commands.put(CG.IRETURN);
+                } else if (curZnachType.equals("String")) {
+                    m_commands.put(CG.ARETURN);
+                }
+
+                Semantic.bytecodeBuffer.put(curMethod, m_commands);
+                m_commands = ByteBuffer.allocate(2048);
+                curZnachType = "";
+            }
+            break;
+            case "create_function_call": {
+                String _name = m_callingFunctionStack.pop().toString();
+                FPTableRow fprow = Semantic.fpTable.getRowByName(_name);
+
+                if (fprow != null) {// генерируем вызов процедуры
+                    int idMethodRef = Semantic.constantsTable.getRowByTypeAndName("MethodRef", _name).getID();
+                    m_commands.put(CG.INVOKESTATIC);
+                    m_commands.putShort((short) idMethodRef);
+                }
+                for (int g = 0; g < fprow.getParCount(); g++) {
+                    m_typeStack.pop();
+                }
+                if (fprow.getReturnType().isEmpty() != true) {
+                    String _type = translateType(fprow.getReturnType());
+                    m_typeStack.push(_type);
+                }
+
+            }
+            break;
+            case "create_ident": {
+                boolean lock = false;
+                String _par = vx.getParentList().get(vx.enterNum).getAttribute("NAME");
+                if (_par.equals("create_proc")) {
+                    int id = Semantic.constantsTable.getRowByName(m_idStack.pop().toString()).getID();
+                    curMethod = Semantic.constantsTable.getRowById(id).getStringValue();
+                    vx.enterNum++;
+                } else if (_par.equals("create_func")) {
+                    int id = Semantic.constantsTable.getRowByName(m_idStack.pop().toString()).getID();
+                    curMethod = Semantic.constantsTable.getRowById(id).getStringValue();
+                    vx.enterNum++;
+                } else if (_par.equals("create_enum_array_identifier_list")) {
+                    int funID = Semantic.fpTable.getRowByName(curMethod).getID();
+                    String _name = m_idStack.pop().toString();
+                    String _val = Semantic.localsTable.getRowByFunIDAndName(funID, _name).getValue().toString();
+                    m_idDeclStack.push(_val);
+                    vx.enterNum++;
+
+                } else if (_par.equals("create_enum_atomic_identifier_list")) {
+                    int funID = Semantic.fpTable.getRowByName(curMethod).getID();
+                    String _name = m_idStack.pop().toString();
+                    String _val = Semantic.localsTable.getRowByFunIDAndName(funID, _name).getValue().toString();
+                    m_idDeclStack.push(_val);
+                    vx.enterNum++;
+
+                } else if (_par.equals("[]:=")) {
+                    int funID = Semantic.fpTable.getRowByName(curMethod).getID();
+                    String _name = m_idStack.pop().toString();
+                    //  String _val = Semantic.localsTable.getRowByFunIDAndName(funID, _name).getValue().toString();
+                    // m_id6Stack.push(_val);
+
+                    int id = Integer.valueOf(Semantic.localsTable.getRowByFunIDAndName(funID, _name).getID()).intValue();
+                    loadAFromLocalVar((byte) id);
+                    vx.enterNum++;
+
+                } else if (_par.equals("create_array_expr")) {
+                    int funID = Semantic.fpTable.getRowByName(curMethod).getID();
+                    String _name = m_idStack.pop().toString();
+                    int id = Integer.valueOf(Semantic.localsTable.getRowByFunIDAndName(funID, _name).getID()).intValue();
+                    loadAFromLocalVar((byte) id);
+                    vx.enterNum++;
+                } else if (_par.equals("create_expr_id") && vx.getParentList().get(vx.enterNum).getParentList().get(0).getAttribute("NAME").equals(":=") != true) {
+                    // здесь генерация кода для вызова процедуры или значения rvalue-переменной
+                    String _name = m_idStack.pop().toString();
+                    FPTableRow fprow = Semantic.fpTable.getRowByName(_name);
+                    String _type = "";
+                    if (m_typeStack.empty() != true) {
+                        _type = m_typeStack.peek().toString();
+                    }
+
+                    if (fprow != null) {// генерируем вызов процедуры/функции
+                        int idMethodRef = Semantic.constantsTable.getRowByTypeAndName("MethodRef", _name).getID();
+                        m_commands.put(CG.INVOKESTATIC);
+                        m_commands.putShort((short) idMethodRef);
+                        String ret = Semantic.fpTable.getRowByName(_name).getReturnType();
+                        ret = translateType(ret);
+                        m_typeStack.push(ret);
+                        lock = true;
+                    } else {// генерируем взятие значения переменной
+                        int funID = Semantic.fpTable.getRowByName(curMethod).getID();
+                        int id = Integer.valueOf(Semantic.localsTable.getRowByFunIDAndName(funID, _name).getID()).intValue();
+                        loadValueFromLocalVar((byte) id);
+
+                    }
+
+                    if (lock == false && _type.isEmpty() != true) {
+                        m_typeStack.push(_type);
+                    }
+                    lock = false;
+
+                    vx.enterNum++;
+                } else if (_par.equals("create_function_call")) {
+                    // здесь генерация кода для вызова процедуры с параметрами
+
+                    String _name = m_idStack.pop().toString();
+                    m_callingFunctionStack.push(_name);
+
+                    vx.enterNum++;
+                }
+
+
+            }
+            break;
+            case "create_enum_array_identifier_list": {
+
+                while (!m_idDeclStack.empty()) {
+                    String id = m_idDeclStack.pop().toString();
+                    int funID = Semantic.fpTable.getRowByName(curMethod).getID();
+                    LocalsTableRow row = Semantic.localsTable.getRowByFunIDAndName(funID, id);
+                    int idLocVar = row.getID();
+                    String _type = row.getType();
+                    String[] arrDims = _type.split("\\[");
+                    if (arrDims.length == 2) {
+                        // Одномерный массив
+                        byte _typecode = -1;
+                        switch (arrDims[0]) {
+                            case "целтаб": {
+                                _typecode = T_INT;
+                            }
+                            break;
+                            case "вещтаб": {
+                                _typecode = T_DOUBLE;
+                            }
+                            break;
+                            case "логтаб": {
+                                _typecode = T_BOOLEAN;
+                            }
+                            break;
+                            case "симтаб": {
+                                _typecode = T_CHAR;
+                            }
+                            break;
+                            case "литтаб": {
+                                _typecode = 100;
+                            }
+                            break;
+                        }
+                        String size = String.valueOf(arrDims[1]);
+                        pushIntOnStack(size);
+                        if (_typecode == 100) {
+                            m_commands.put(CG.ANEWARRAY);
+                            short classID = (short) Semantic.constantsTable.getRowByTypeAndName("Class", "java/lang/String").getID();
+                            m_commands.putShort(classID);
+
+                        } else {
+
+                            m_commands.put(CG.NEWARRAY);
+
+                            if (_typecode == T_INT) {
+                                m_commands.put(T_INT);
+                                putAIntoLocalVar((byte) idLocVar);
+                            } else if (_typecode == T_DOUBLE) {
+                                m_commands.put(T_DOUBLE);
+                                putAIntoLocalVar((byte) idLocVar);
+                            } else if (_typecode == T_BOOLEAN) {
+                                m_commands.put(T_BOOLEAN);
+                                putAIntoLocalVar((byte) idLocVar);
+                            } else if (_typecode == T_CHAR) {
+                                m_commands.put(T_CHAR);
+                                putAIntoLocalVar((byte) idLocVar);
+                            } else if (_typecode == 100) {
+                                putAIntoLocalVar((byte) idLocVar);
+                            }
+                        }
+                    } else {// многомерный массив
+                        int dims = arrDims.length - 1;
+                        String searchType = "";
+                        int classID = -1;
+                        for (int y = 1; y <= dims; y++) {
+                            String size = String.valueOf(arrDims[y]);
+                            pushIntOnStack(size);
+                            searchType += "[";
+                        }
+                        m_commands.put(CG.MULTIANEWARRAY);
+
+                        switch (arrDims[0]) {
+                            case "целтаб": {
+                                searchType += "I";
+                                classID = Semantic.constantsTable.getRowByTypeAndName("Class", searchType).getID();
+                            }
+                            break;
+                            case "вещтаб": {
+                                searchType += "D";
+                                classID = Semantic.constantsTable.getRowByTypeAndName("Class", searchType).getID();
+                            }
+                            break;
+                            case "логтаб": {
+                                searchType += "Z";
+                                classID = Semantic.constantsTable.getRowByTypeAndName("Class", searchType).getID();
+                            }
+                            break;
+                            case "симтаб": {
+                                searchType += "C";
+                                classID = Semantic.constantsTable.getRowByTypeAndName("Class", searchType).getID();
+                            }
+                            break;
+                            case "литтаб": {
+                                searchType += "Ljava/lang/String;";
+                                classID = Semantic.constantsTable.getRowByTypeAndName("Class", searchType).getID();
+                            }
+                            break;
+                        }
+                        m_commands.putShort((short) classID);
+                        m_commands.put((byte) dims);
+                        putAIntoLocalVar((byte) idLocVar);
+
+                    }
+
+                }
+            }
+            break;
+            case "create_stmt_list": {
+                m_idDeclStack.clear();
+                m_typeStack.clear();
+                m_idStack.clear();
+            }
+            break;
+            case "append_to_stmt_list": {
+                m_idDeclStack.clear();
+                m_typeStack.clear();
+                m_idStack.clear();
+            }
+            break;
+            case "create_expr_id": {
+                String _par = vx.generateNLevelParent(1).getAttribute("NAME");
+                if (_par.equals("create_expr_list_print")) {
+                    specialForPrintExprList();
+                }
+            }
+            break;
+            case "create_param_list": {
+                m_idStack.clear();
+                m_typeStack.clear();
+            }
+            break;
+
+            case "+": {
+                if (m_typeStack.get(m_typeStack.size() - 2).toString().equals("INT")
+                        && m_typeStack.get(m_typeStack.size() - 1).toString().equals("INT")) {
+                    m_commands.put(CG.IADD);
+                    m_typeStack.pop();
+                } else if (m_typeStack.get(0).toString().equals("DOUBLE")
+                        && m_typeStack.get(1).toString().equals("DOUBLE")) {
+                    m_commands.put(CG.DADD);
+                    m_typeStack.pop();
+                }
+            }
+            break;
+            case "-": {
+                if (m_typeStack.get(m_typeStack.size() - 2).toString().equals("INT")
+                        && m_typeStack.get(m_typeStack.size() - 1).toString().equals("INT")) {
+                    m_commands.put(CG.ISUB);
+                    m_typeStack.pop();
+                } else if (m_typeStack.get(0).toString().equals("DOUBLE")
+                        && m_typeStack.get(1).toString().equals("DOUBLE")) {
+                    m_commands.put(CG.DSUB);
+                    m_typeStack.pop();
+                }
+            }
+            break;
+            case "*": {
+                if (m_typeStack.get(m_typeStack.size() - 2).toString().equals("INT")
+                        && m_typeStack.get(m_typeStack.size() - 1).toString().equals("INT")) {
+                    m_commands.put(CG.IMUL);
+                    m_typeStack.pop();
+                } else if (m_typeStack.get(0).toString().equals("DOUBLE")
+                        && m_typeStack.get(1).toString().equals("DOUBLE")) {
+                    m_commands.put(CG.DMUL);
+                    m_typeStack.pop();
+                }
+
+            }
+            break;
+            case "/": {
+
+                if (m_typeStack.get(m_typeStack.size() - 2).toString().equals("INT")
+                        && m_typeStack.get(m_typeStack.size() - 1).toString().equals("INT")) {
+                    m_commands.put(CG.IDIV);
+                    m_typeStack.pop();
+                } else if (m_typeStack.get(0).toString().equals("DOUBLE")
+                        && m_typeStack.get(1).toString().equals("DOUBLE")) {
+                    m_commands.put(CG.DDIV);
+                    m_typeStack.pop();
+                }
+            }
+            break;
+            case "**": {
+                if (m_typeStack.get(m_typeStack.size() - 2).toString().equals("INT")
+                        && m_typeStack.get(m_typeStack.size() - 1).toString().equals("INT")) {
+                    m_commands.put(CG.INVOKESTATIC);
+                    int idMethodRef = findIdForMethodRef("RTL", "ku_pow", "(II)I");
+                    m_commands.putShort((short) idMethodRef);
+                    m_typeStack.pop();
+                } else if (m_typeStack.get(0).toString().equals("DOUBLE")
+                        && m_typeStack.get(1).toString().equals("DOUBLE")) {
+                    m_commands.put(CG.INVOKESTATIC);
+                    int idMethodRef = findIdForMethodRef("RTL", "ku_pow", "(DD)D");
+                    m_commands.putShort((short) idMethodRef);
+                    m_typeStack.pop();
+                }
+
+            }
+            break;
+            case "[]:=": {
+                byte i = 1;
+
+                String type = m_typeStack.pop().toString();
+                switch (type) {
+                    case "INT":
+                        m_commands.put(CG.IASTORE);
+                        break;
+                    case "CHAR":
+                        m_commands.put(CG.CASTORE);
+                        break;
+                    case "String":
+                        m_commands.put(CG.AASTORE);
+                        break;
+                    case "BOOLEAN":
+                        m_commands.put(CG.BASTORE);
+                        break;
+                    case "DOUBLE":
+                        m_commands.put(CG.DASTORE);
+                        break;
+                }
+                m_typeStack.clear();
+
+
+
+            }
+            break;
+            case ":=": {
+
+                if (vx.getParentList().get(0).getAttribute("NAME").equals(":=")) {
+                    m_commands.put(CG.DUP);
+                }
+                String nameOfVar = vx.getChildByOrder(0).getChildByOrder(0).getChildByOrder(0).getAttribute("NAME");
+                int funID = Semantic.fpTable.getRowByName(curMethod).getID();
+                int idLocalVal = Semantic.localsTable.getRowByFunIDAndName(funID, nameOfVar).getID();
+
+                String type = m_typeStack.pop().toString();
+
+
+                if (type.equals("String")) {
+                    putAIntoLocalVar((byte) idLocalVal);
+                } else if (type.equals("INT")) {
+                    putIIntoLocalVar((byte) idLocalVal);
+                } else if (type.equals("DOUBLE")) {
+                    putDIntoLocalVar((byte) idLocalVal);
+                } else if (type.equals("CHAR")) {
+                    putCIntoLocalVar((byte) idLocalVal);
+                }
+
+
+                m_typeStack.pop();// осталось от сгенерированного lvalue
+
+            }
+            break;
+
+
+        }
+    }
+
+    public void putDIntoLocalVar(byte numLocVar) {
+
+        if (numLocVar == 0) {
+            m_commands.put(CG.DSTORE_0);
+        } else if (numLocVar == 1) {
+            m_commands.put(CG.DSTORE_1);
+        } else if (numLocVar == 2) {
+            m_commands.put(CG.DSTORE_2);
+        } else if (numLocVar == 3) {
+            m_commands.put(CG.DSTORE_3);
+        } else {
+            m_commands.put(CG.DSTORE);
+            m_commands.put(numLocVar);
+        }
+    }
+
+    public void putAIntoLocalVar(byte numLocVar) {
+
+        if (numLocVar == 0) {
+            m_commands.put(CG.ASTORE_0);
+        } else if (numLocVar == 1) {
+            m_commands.put(CG.ASTORE_1);
+        } else if (numLocVar == 2) {
+            m_commands.put(CG.ASTORE_2);
+        } else if (numLocVar == 3) {
+            m_commands.put(CG.ASTORE_3);
+        } else {
+            m_commands.put(CG.ASTORE);
+            m_commands.put(numLocVar);
+        }
+    }
+
+    public void putIIntoLocalVar(byte numLocVar) {
+
+        if (numLocVar == 0) {
+            m_commands.put(CG.ISTORE_0);
+        } else if (numLocVar == 1) {
+            m_commands.put(CG.ISTORE_1);
+        } else if (numLocVar == 2) {
+            m_commands.put(CG.ISTORE_2);
+        } else if (numLocVar == 3) {
+            m_commands.put(CG.ISTORE_3);
+        } else {
+            m_commands.put(CG.ISTORE);
+            m_commands.put(numLocVar);
+        }
+    }
+
+    public void putCIntoLocalVar(byte numLocVar) {
+
+        if (numLocVar == 0) {
+            m_commands.put(CG.ISTORE_0);
+        } else if (numLocVar == 1) {
+            m_commands.put(CG.ISTORE_1);
+        } else if (numLocVar == 2) {
+            m_commands.put(CG.ISTORE_2);
+        } else if (numLocVar == 3) {
+            m_commands.put(CG.ISTORE_3);
+        } else {
+            m_commands.put(CG.ISTORE);
+            m_commands.put(numLocVar);
+        }
     }
 
     public void close() throws IOException {

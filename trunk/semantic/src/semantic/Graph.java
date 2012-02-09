@@ -188,6 +188,9 @@ public class Graph {
     }
 
     public void removeByVirginName(String str) {
-        m_nodes.remove(getByVertexName(str));
+        m_nodes.remove(getVertexByVirginName(str));
+    }
+     public void remove(Vertex vx) {
+        m_nodes.remove(vx);
     }
 }

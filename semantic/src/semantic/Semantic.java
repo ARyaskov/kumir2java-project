@@ -63,7 +63,7 @@ public class Semantic {
         String fileContentLoc = "";
         Scanner in = null;
         try {
-            in = new Scanner(new File(path), "Windows-1251");
+            in = new Scanner(new File(path), "windows-1251");
         } catch (FileNotFoundException ex) {
             Logger.getLogger(Semantic.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -80,18 +80,21 @@ public class Semantic {
             String str2 = rows[i].split("\\x{1F}")[1];
             str1 = str1.trim();
             str2 = str2.trim();
-            if (str1.length() > 0) {
+            boolean isNum = Semantic.isNumeric(str2);
+            if (isNum) {
+                if (str1.length() > 0) {
 
-                locations.put(str1, Integer.valueOf(str2));
+                    locations.put(str1, Integer.valueOf(str2));
 
-                if (multipleLocations.containsKey(str1)) {
-                    ArrayList<Integer> int0 = multipleLocations.get(str1);
-                    int0.add(Integer.valueOf(str2));
-                    multipleLocations.put(str1, int0);
-                } else {
-                    ArrayList<Integer> int0 = new ArrayList();
-                    int0.add(Integer.valueOf(str2));
-                    multipleLocations.put(str1, int0);
+                    if (multipleLocations.containsKey(str1)) {
+                        ArrayList<Integer> int0 = multipleLocations.get(str1);
+                        int0.add(Integer.valueOf(str2));
+                        multipleLocations.put(str1, int0);
+                    } else {
+                        ArrayList<Integer> int0 = new ArrayList();
+                        int0.add(Integer.valueOf(str2));
+                        multipleLocations.put(str1, int0);
+                    }
                 }
             }
         }
@@ -660,52 +663,71 @@ public class Semantic {
     }
 
     public static HashMap<String, String> semanticWork_acquireParamsFP(Vertex in_vx) {
-        ArrayList<Vertex> list = new ArrayList();
-        HashMap<String, String> tempLocals = new HashMap();
 
-        Vertex vx = getChildByAttName(in_vx, "create_param_list");
-        if (vx != null) {
-            for (Vertex nowVx : vx.getChildList()) {
-                if (nowVx.getAttribute("NAME").equals("create_from_arg_rezvalue")) {
-                    Vertex createArg = nowVx.getChildList().get(0);
-                    Vertex create_atomic_type = createArg.getChildList().get(0);
-                    String type = create_atomic_type.getChildList().get(0).getAttribute("NAME");
 
-                    String name = null;
-                    Vertex createEnumAtomicIdentifierList = createArg.getChildList().get(1);
-                    for (Vertex inEnum : createEnumAtomicIdentifierList.getChildList()) {
-                        if (inEnum.getAttribute("NAME").equals("create_ident")) {
-                            name = inEnum.getChildList().get(0).getAttribute("NAME");
-                            tempLocals.put(name, type);
-                        } else if (inEnum.getAttribute("NAME").equals("append_enum_atomic_identifier_list")) {
-                            name = inEnum.getChildList().get(0).getChildList().get(0).getAttribute("NAME");
-                            tempLocals.put(name, type);
-                        }
-                    }
-
-                } else if (nowVx.getAttribute("NAME").equals("append_param_to_list")) {
-                    Vertex createArg = nowVx.getChildList().get(0).getChildList().get(0);
-                    Vertex create_atomic_type = createArg.getChildList().get(0);
-                    String type = create_atomic_type.getChildList().get(0).getAttribute("NAME");
-
-                    String name = null;
-                    Vertex createEnumAtomicIdentifierList = createArg.getChildList().get(1);
-                    for (Vertex inEnum : createEnumAtomicIdentifierList.getChildList()) {
-                        if (inEnum.getAttribute("NAME").equals("create_ident")) {
-                            name = inEnum.getChildList().get(0).getAttribute("NAME");
-                            tempLocals.put(name, type);
-                        } else if (inEnum.getAttribute("NAME").equals("append_enum_atomic_identifier_list")) {
-                            name = inEnum.getChildList().get(0).getChildList().get(0).getAttribute("NAME");
-                            tempLocals.put(name, type);
-                        }
-                    }
-                }
+        HashMap<String, String> result = new HashMap();
+        Vertex startVx = null;
+        Iterator it0 = in_vx.getChildList().iterator();
+        while (it0.hasNext()) {
+            Vertex vxNow = (Vertex) it0.next();
+            if (vxNow.getAttribute("NAME").equals("create_param_list")) {
+                startVx = vxNow.getChildByOrder(0).getChildByOrder(0);
+                break;
             }
 
         }
+        String found_type = "";
+        String found_name = "";
+        if (startVx != null) {
+            Iterator it = startVx.getChildList().iterator();
+            String str = "";
+            String prefixType = "";
+            while (it.hasNext()) {
+                Vertex _vxNow = (Vertex) it.next();
+
+                str = _vxNow.getAttribute("NAME");
+
+                if (str.equals("create_array_type")) {
+                    prefixType = _vxNow.getChildByOrder(0).getAttribute("NAME");
+                } else if (str.equals("create_enum_array_identifier_list")) {
+                    for (Vertex _v0 : _vxNow.getChildList()) {
+                        String str0 = _v0.getAttribute("NAME");
+                        if (str0.equals("create_int_int_dim")) {
+                            prefixType += getDimensions(_v0);
+                        } else if (str0.equals("create_int_id_dim")) {
+                            prefixType += getDimensions(_v0);
+                        } else if (str0.equals("create_ident")) {
+                            found_name = _v0.getChildByOrder(0).getAttribute("NAME");
+                        } else if (str0.equals("append_enum_array_identifier_list")) {
+                            result.put(found_name, prefixType);
+                            found_name = "";
+                            prefixType = "";
+                            for (Vertex _v1 : _v0.getChildList()) {
+                                String str1 = _v1.getAttribute("NAME");
+                                if (str1.equals("create_int_int_dim")) {
+                                    prefixType += getDimensions(_v1);
+                                } else if (str1.equals("create_int_id_dim")) {
+                                    prefixType += getDimensions(_v1);
+                                } else if (str1.equals("create_ident")) {
+                                    found_name = _v1.getChildByOrder(0).getAttribute("NAME");
+                                }
+
+                            }
+                            result.put(found_name, prefixType);
+                            found_name = "";
+                            prefixType = "";
+                        }
+                    }
+                }
+                if (found_name.isEmpty() != true && prefixType.isEmpty() != true) {
+                    result.put(found_name, prefixType);
+                }
+            }
+        }
 
 
-        return tempLocals;
+
+        return result;
     }
 
     /*
@@ -758,22 +780,112 @@ public class Semantic {
 
         }
 
-        /*
-         * //Теперь собираем из параметров ArrayList<Vertex> tempLst = new
-         * ArrayList(); ArrayList<Vertex> tempLst2 = new ArrayList(); Vertex
-         * vxNow2 = new Vertex(); findPureNameInChilds2List(in_vx,
-         * "create_from_arg_rezvalue", tempLst);
-         *
-         * Iterator it3 = tempLst.iterator(); while (it3.hasNext()) { Vertex vx3
-         * = (Vertex) it3.next(); findTypeInChilds2List(vx3, "ID", tempLst2); }
-         */
 
+
+        /*
+         * Табличные объявления
+         */
+        list = new ArrayList();
+        findPureNameInChilds2List(in_vx, "create_from_array_decl", list);
+
+        it = list.iterator();
+        while (it.hasNext()) {
+            Vertex _vxNow = (Vertex) it.next();
+
+            String found_type;
+
+
+            Vertex vxNow = getByVertexName(_vxNow, "create_array_type");
+            found_type = vxNow.getChildList().get(0).getAttribute("NAME");
+
+            vxNow = vxNow.getParentList().get(0);
+            vxNow = getByVertexName(vxNow, "create_enum_array_identifier_list");
+            Iterator it2 = vxNow.getChildList().iterator();
+
+            vxNow.addAttribute("TYPE", found_type);
+            _vxNow.addAttribute("TYPE", found_type);
+
+            while (it2.hasNext()) {
+                Vertex vert = (Vertex) it2.next();
+                String tempStr = vert.getAttribute("NAME");
+                switch (tempStr) {
+                    case "create_int_int_dim": {
+                        String _decls = getDimensions(vert);
+                        found_type += _decls;
+                        tempLocals.put(vert.getParentList().get(0).getChildByOrder(0).getChildByOrder(0).getAttribute("NAME"),
+                                found_type);
+                        vert.getChildList().get(0).addAttribute("TYPE", found_type);
+                        break;
+                    }
+                    case "create_int_id_dim": {
+                        String _decls = getDimensions(vert);
+                        found_type += _decls;
+                        tempLocals.put(vert.getChildList().get(0).getAttribute("NAME"),
+                                found_type);
+                        vert.getChildList().get(0).addAttribute("TYPE", found_type);
+                        break;
+                    }
+                    case "create_ident":
+                        tempLocals.put(vert.getChildList().get(0).getAttribute("NAME"),
+                                found_type);
+                        vert.getChildList().get(0).addAttribute("TYPE", found_type);
+                        vert.addAttribute("TYPE", found_type);
+                        break;
+                    case "append_enum_array_identifier_list": {
+                        Vertex _vx = vert.getChildList().get(0);
+                        String _decls = getDimensions(vert.getChildList().get(1));
+                        found_type += _decls;
+                        tempLocals.put(_vx.getChildList().get(0).getAttribute("NAME"),
+                                found_type);
+                        _vx.addAttribute("TYPE", found_type);
+                        _vx.getChildList().get(0).addAttribute("TYPE", found_type);
+                        break;
+                    }
+                }
+            }
+
+        }
 
 
 
         return tempLocals;
 
 
+    }
+
+    /*
+     * Возвращает измерения массива в виде "1:10,1:23" Функция принимает узел
+     * create_int_int_dim или create_int_id_dim или append_int_int_dim или
+     * append_int_id_dim Выход в виде ([1:10, 1:d, 1:12] -> [10[d[12)
+     */
+    public static String getDimensions(Vertex vx) {
+        String result = "";
+
+
+        Iterator it = vx.getChildList().iterator();
+        while (it.hasNext()) {
+            Vertex vxNow = (Vertex) it.next();
+            String nowName = vxNow.getAttribute("NAME");
+            String typeOfSymbol = vxNow.getTypeOfSymbol();
+            String type = vxNow.getAttribute("TYPE");
+
+
+            if (nowName.equals("append_int_id_dim")) {
+                String name = vxNow.getChildByOrder(1).getAttribute("NAME");
+                result += "[" + name;
+
+            } else if (nowName.equals("append_int_int_dim")) {
+                String name = vxNow.getChildByOrder(1).getAttribute("NAME");
+                result += "[" + name;
+
+            } else if (typeOfSymbol.equals("SIMPLE") && !nowName.equals("1")) {
+                result += "[" + nowName;
+            }
+
+
+        }
+
+        return result;
     }
 
     public static String getTypeOfIdentifier(Vertex in_vx) {
@@ -1174,7 +1286,63 @@ public class Semantic {
 
     }
 
-    public static void getParameterList(Vertex in_vx, ArrayList<String> list) {
+    public static HashMap<String, String> getParameterHash(Vertex in_vx) {
+        HashMap<String, String> result = new HashMap();
+        String str = null;
+        ArrayList<Vertex> list2 = new ArrayList();
+        findPureNameInChilds2List(in_vx, "create_arg", list2);
+        Iterator it = list2.iterator();
+        int countInArgRez = 0;
+        String curName = "";
+        while (it.hasNext()) {
+            Vertex vx = (Vertex) it.next();
+            if (vx.getChildList().get(1).getAttribute("NAME").equals("create_enum_array_identifier_list")) {
+                // особый режим поиска в массиве
+                str = vx.getChildList().get(0).getChildList().get(0).getAttribute("NAME");
+                boolean flag = true;
+                String dimHere = "";
+                for (Vertex _v1 : vx.getChildList().get(1).getChildList()) {
+
+                    String _name = _v1.getAttribute("NAME");
+                    if (_name.equals("append_enum_array_identifier_list")) {
+                        for (Vertex _v2 : _v1.getChildList()) {
+                            String _name2 = _v2.getAttribute("NAME");
+                            if (_name2.equals("create_int_int_dim")) {
+                                String dimensions = getDimensions(_v2);
+                                result.put(curName, str + dimensions);
+                            } else if (_name2.equals("create_ident")) {
+                                curName = _v2.getChildByOrder(0).getAttribute("NAME");
+                            }
+
+                        }
+
+                    } else if (_name.equals("create_int_int_dim")) {
+                        String dimensions = getDimensions(_v1);
+
+                        result.put(curName, str + dimensions);
+                    } else if (_name.equals("create_ident")) {
+                        curName = _v1.getChildByOrder(0).getAttribute("NAME");
+                    }
+                }
+
+            } else {
+                countInArgRez = vx.getChildList().get(1).getChildList().size();
+                str = vx.getChildList().get(0).getChildList().get(0).getAttribute("NAME");
+                curName = vx.getChildByOrder(1).getChildByOrder(0).getChildByOrder(0).getAttribute("NAME");
+                for (int i = 0; i < countInArgRez; i++) {
+                    result.put(curName, str);
+                }
+            }
+        }
+
+
+
+        return result;
+
+    }
+
+    public static ArrayList<String> getParameterList(Vertex in_vx) {
+        ArrayList<String> result = new ArrayList();
         String str = null;
         ArrayList<Vertex> list2 = new ArrayList();
         findPureNameInChilds2List(in_vx, "create_arg", list2);
@@ -1182,27 +1350,41 @@ public class Semantic {
         int countInArgRez = 0;
         while (it.hasNext()) {
             Vertex vx = (Vertex) it.next();
-            countInArgRez = vx.getChildList().get(1).getChildList().size();
-            str = vx.getChildList().get(0).getChildList().get(0).getAttribute("NAME");
-            for (int i = 0; i < countInArgRez; i++) {
-                list.add(str);
+            if (vx.getChildList().get(1).getAttribute("NAME").equals("create_enum_array_identifier_list")) {
+                // особый режим поиска в массиве
+                str = vx.getChildList().get(0).getChildList().get(0).getAttribute("NAME");
+                boolean flag = true;
+                String dimHere = "";
+                for (Vertex _v1 : vx.getChildList().get(1).getChildList()) {
+
+                    String _name = _v1.getAttribute("NAME");
+                    if (_name.equals("append_enum_array_identifier_list")) {
+                        for (Vertex _v2 : _v1.getChildList()) {
+                            String _name2 = _v2.getAttribute("NAME");
+                            if (_name2.equals("create_int_int_dim")) {
+                                String dimensions = getDimensions(_v2);
+                                result.add(str + dimensions);
+                            }
+                        }
+
+                    } else if (_name.equals("create_int_int_dim")) {
+                        String dimensions = getDimensions(_v1);
+
+                        result.add(str + dimensions);
+                    }
+                }
+
+            } else {
+                countInArgRez = vx.getChildList().get(1).getChildList().size();
+                str = vx.getChildList().get(0).getChildList().get(0).getAttribute("NAME");
+                for (int i = 0; i < countInArgRez; i++) {
+                    result.add(str);
+                }
             }
         }
 
-        list2 = new ArrayList();
-        findPureNameInChilds2List(in_vx, "create_rez", list2);
-        it = list2.iterator();
-        str = null;
-        while (it.hasNext()) {
-            Vertex vx = (Vertex) it.next();
-            countInArgRez = vx.getChildList().get(1).getChildList().size();
-            str = vx.getChildList().get(0).getChildList().get(0).getAttribute("NAME");
-            for (int i = 0; i < countInArgRez; i++) {
-                list.add(str);
-            }
-        }
 
-
+        return result;
 
     }
 
@@ -1223,6 +1405,8 @@ public class Semantic {
             result = "Z";
         } else if (result.equals("лит")) {
             result = "Ljava/lang/String;";
+        } else if (result.equals("вещ")) {
+            result = "D";
         } else {
             result = "V";
         }
@@ -1252,7 +1436,7 @@ public class Semantic {
             ConstantsTableRow CTRowName = new ConstantsTableRow(new ArrayList(), "UTF-8", name);
             constantsTable.addRow(CTRowName);
 
-            getParameterList(vx, plist);
+            plist = getParameterList(vx);
 
             String desc = FPTableRow.makeDescriptor(plist, "V");
             ConstantsTableRow CTRowType = new ConstantsTableRow(new ArrayList(), "UTF-8", desc);
@@ -1302,7 +1486,7 @@ public class Semantic {
             ConstantsTableRow CTRowName = new ConstantsTableRow(inte.intValue(), "UTF-8", name);
             constantsTable.addRow(CTRowName);
 
-            getParameterList(vx, plist);
+            plist = getParameterList(vx);
             retVal = getRetVal(vx);
 
             String desc = FPTableRow.makeDescriptor(plist, retVal);
@@ -1383,7 +1567,7 @@ public class Semantic {
             }
             tempVx = tempVx.getParentList().get(0);
             decls = semanticWork_acquireDeclsFP(tempVx);
-            params = semanticWork_acquireParamsFP(tempVx);
+            params = getParameterHash(tempVx);
             curFuncID = curFun.getID();
             Iterator it2 = decls.keySet().iterator();
             while (it2.hasNext()) {
@@ -1410,23 +1594,37 @@ public class Semantic {
 
                 String type = null;
                 if (typeDeclNow.equals("вещ")) {
-                    type = "FLOAT";
+                    type = "DOUBLE";
                 } else if (typeDeclNow.equals("цел")) {
                     type = "INT";
                 } else if (typeDeclNow.equals("лит")) {
                     type = "String";
+                } else if (typeDeclNow.equals("сим")) {
+                    type = "CHAR";
+                } else if (typeDeclNow.equals("лог")) {
+                    type = "BOOLEAN";
+                } else if (typeDeclNow.indexOf("целтаб") != -1) {
+                    type = typeDeclNow;
+                } else if (typeDeclNow.indexOf("симтаб") != -1) {
+                    type = typeDeclNow;
+                } else if (typeDeclNow.indexOf("логтаб") != -1) {
+                    type = typeDeclNow;
+                } else if (typeDeclNow.indexOf("вещтаб") != -1) {
+                    type = typeDeclNow;
+                } else if (typeDeclNow.indexOf("литтаб") != -1) {
+                    type = typeDeclNow;
                 } else {
                     type = "UTF-8";
                 }
                 FPTableRow row = fpTable.getRowByName(curFun.getName());
                 int idFunc = row.getID();
                 LocalsTableRow ltr = new LocalsTableRow(tempLocs, type, declNow, idFunc, false);
+
                 localsTable.add(ltr);
-
             }
-
-            //Теперь добавим параметры
+//Теперь добавим параметры
             Iterator itPAR = params.keySet().iterator();
+
             while (itPAR.hasNext()) {
                 String nowParName = (String) itPAR.next();
 
@@ -1441,11 +1639,15 @@ public class Semantic {
                 }
                 String type = null;
                 if (params.get(nowParName).equals("вещ")) {
-                    type = "FLOAT";
+                    type = "DOUBLE";
                 } else if (params.get(nowParName).equals("цел")) {
                     type = "INT";
                 } else if (params.get(nowParName).equals("лит")) {
                     type = "String";
+                } else if (params.get(nowParName).equals("лог")) {
+                    type = "BOOLEAN";
+                } else if (params.get(nowParName).equals("сим")) {
+                    type = "CHAR";
                 } else {
                     type = "UTF-8";
                 }
@@ -1454,9 +1656,7 @@ public class Semantic {
                 LocalsTableRow ltr = new LocalsTableRow(tempLocs, type, nowParName, idFunc, true);
                 localsTable.add(ltr);
             }
-
         }
-
     }
 
     public static boolean isNumeric(String aStringValue) {
@@ -1468,7 +1668,7 @@ public class Semantic {
 
     public static int findClassID(String methodRef) {
         int result;
-        result = constantsTable.getRowByName("MainClass").getID();
+        result = constantsTable.getRowByTypeAndName("Class", "MainClass").getID();
 
         return result;
 
@@ -1534,9 +1734,10 @@ public class Semantic {
 
 
         makeMethodRef(classID, "ku_print", "(I)V");
+        makeMethodRef(classID, "ku_print", "(D)V");
+        makeMethodRef(classID, "ku_print", "(C)V");
+        makeMethodRef(classID, "ku_print", "(Z)V");
         makeMethodRef(classID, "ku_print", "(Ljava/lang/String;)V");
-        makeMethodRef(classID, "ku_println", "(I)V");
-        makeMethodRef(classID, "ku_println", "(Ljava/lang/String;)V");
         makeMethodRef(classID, "ku_println", "()V");
         makeMethodRef(classID, "ku_pow", "(II)I");
 
@@ -1571,6 +1772,60 @@ public class Semantic {
         }
     }
 
+    public static void addMultiArraysToConstants() {
+        Iterator it = localsTable.getIterator();
+        while (it.hasNext()) {
+            boolean existMArrays = false;
+            String utf8Name = "";
+            LocalsTableRow row = (LocalsTableRow) it.next();
+
+            String _type = row.getType();
+            String[] arrDims = _type.split("\\[");
+
+            if (arrDims.length > 2) {
+                for (int y = arrDims.length - 1; y > 0; y--) {
+                    utf8Name += "[";
+                    existMArrays = true;
+                }
+                switch (arrDims[0]) {
+                    case "целтаб": {
+                        utf8Name += "I";
+                        existMArrays = true;
+                    }
+                    break;
+                    case "вещтаб": {
+                        utf8Name += "D";
+                        existMArrays = true;
+                    }
+                    break;
+                    case "логтаб": {
+                        utf8Name += "Z";
+                        existMArrays = true;
+                    }
+                    break;
+                    case "симтаб": {
+                        utf8Name += "C";
+                        existMArrays = true;
+                    }
+                    break;
+                    case "литтаб": {
+                        utf8Name += "Ljava/lang/String;";
+                        existMArrays = true;
+                    }
+                    break;
+                }
+                if (existMArrays == true) {
+                    ConstantsTableRow crow;
+                    crow = new ConstantsTableRow(new ArrayList(), "UTF-8", utf8Name);
+                    constantsTable.addRow(crow);
+
+                    crow = new ConstantsTableRow(new ArrayList(), "Class", String.valueOf(crow.getID()));
+                    constantsTable.addRow(crow);
+                }
+            }
+        }
+    }
+
     public static void fillConstantsTable() {
         ConstantsTableRow row;
         row = new ConstantsTableRow(new ArrayList(), "UTF-8", "Code");
@@ -1579,9 +1834,14 @@ public class Semantic {
 
         row = new ConstantsTableRow(new ArrayList(), "UTF-8", "java/lang/Object");
         constantsTable.addRow(row);
-        row = new ConstantsTableRow(new ArrayList(), "Class", ConstantsTableRow.m_constantIDCount - 1);
+        row = new ConstantsTableRow(new ArrayList(), "Class", row.getID());
         constantsTable.addRow(row);
         m_objectClassID = row.getID();
+
+        row = new ConstantsTableRow(new ArrayList(), "UTF-8", "java/lang/String");
+        constantsTable.addRow(row);
+        row = new ConstantsTableRow(new ArrayList(), "Class", row.getID());
+        constantsTable.addRow(row);
 
 
 
@@ -1606,7 +1866,7 @@ public class Semantic {
         row = new ConstantsTableRow(new ArrayList(), "UTF-8", "MainClass");
         constantsTable.addRow(row);
 
-        row = new ConstantsTableRow(new ArrayList(), "Class", ConstantsTableRow.m_constantIDCount - 1);
+        row = new ConstantsTableRow(new ArrayList(), "Class", row.getID());
         constantsTable.addRow(row);
 
         m_currentClassID = row.getID();
@@ -1640,6 +1900,8 @@ public class Semantic {
 
         addMethodRefForFunctions();
 
+
+
         Iterator it = multipleLocations.keySet().iterator();
         while (it.hasNext()) {
             String str = (String) it.next();
@@ -1661,21 +1923,27 @@ public class Semantic {
                     }
                     // пропуск - переменные не обязательно вносить в список
                 } else if (str.contains("\"")) {
-
-                    String type = "UTF-8";
                     String convertedString = str.substring(1, str.length() - 1);
-                    ArrayList<Integer> locs = multipleLocations.get(str);
-                    String value = convertedString;
-                    row = new ConstantsTableRow(locs, type, value);
-                    constantsTable.addRow(row);
+                    if (convertedString.length() == 1) {
+                        String type = "UTF-8";
+                        ArrayList<Integer> locs = multipleLocations.get(str);
+                        String value = convertedString;
+                        row = new ConstantsTableRow(locs, "CHAR", value);
+                        constantsTable.addRow(row);
+                    } else {
+                        String type = "UTF-8";
+                        ArrayList<Integer> locs = multipleLocations.get(str);
+                        String value = convertedString;
+                        row = new ConstantsTableRow(locs, type, value);
+                        constantsTable.addRow(row);
 
-                    int indexForStringConst = row.getID();
+                        int indexForStringConst = row.getID();
 
-                    type = "String";
-                    value = String.valueOf(indexForStringConst);
-                    row = new ConstantsTableRow(new ArrayList(), type, value);
-                    constantsTable.addRow(row);
-
+                        type = "String";
+                        value = String.valueOf(indexForStringConst);
+                        row = new ConstantsTableRow(new ArrayList(), type, value);
+                        constantsTable.addRow(row);
+                    }
                 } else {
                     String type = "UTF-8";
                     ArrayList<Integer> locs = multipleLocations.get(str);
@@ -1795,6 +2063,11 @@ public class Semantic {
         }
     }
 
+    public static void swap(ArrayList<Vertex> vxs, int index1, int index2) {
+        ArrayList<Vertex> backup = (ArrayList) vxs.clone();
+
+    }
+
     public static void transformTree() {
         // Трансформируем дерево - приводим узлы := к виду []:=
         ArrayList<Vertex> tempList = new ArrayList();
@@ -1809,30 +2082,59 @@ public class Semantic {
 
         // когда всё пройдено приступаем к обработке каждого
 
-        Iterator it2 = tempList.iterator();
-        while (it2.hasNext()) {
-            Vertex vx = (Vertex) it2.next();
-            // скопируем детей []
-            ArrayList<Vertex> childs = vx.getChildList();
+
+        for (int i = 0; i < tempList.size(); i++) {
+            Vertex vx = tempList.get(i);
+
             // скопируем родителя
             Vertex parent = vx.getParentList().get(0);
-            // удалим []
-            g.removeByVirginName(vx.getVirginName());
+            ArrayList<Vertex> tempPar = new ArrayList();
+            ArrayList<Vertex> backupChilds = (ArrayList) vx.getChildList().clone();
+
+            // parent.getChildList().clear();
+            // скопируем детей []
+            ArrayList<Vertex> childs = (ArrayList) vx.getChildList();
+
+            int m = 0;
+            for (Vertex temp : parent.getChildList()) {
+                if (temp.getAttribute("NAME").equals("create_array_expr") == true) {
+                    temp.addAttribute("NAME", "empty");
+                    m++;
+
+                }
+            }
+
+            int k = 0;
+            for (Vertex every : childs) {
+
+                every.getParentList().clear();
+                if (every.getAttribute("NAME").equals("create_array_expr") != true) {
+                    every.getParentList().add(parent);
+                    parent.getChildList().add(k++, every);
+                }
+            }
+            parent.getChildList().remove(m + k - 1);
+
+
+
             //Переименуем := в []:= 
             String newName = "[]" + parent.getAttribute("NAME");
             parent.addAttribute("NAME", newName);
             // присвоим детей [] списку детей :=, притом первыми
 
             // запасной массив
-            ArrayList<Vertex> temp = parent.getChildList();
-            parent.getChildList().clear();
-
-            for (Vertex v : childs) {
-                parent.getChildList().add(v);
-            }
-            for (Vertex v : temp) {
-                parent.getChildList().add(v);
-            }
+    /*
+             * ArrayList<Vertex> temp = (ArrayList)
+             * parent.getChildList().clone(); parent.getChildList().clear();
+             *
+             * for (Vertex v : childs) { v.getParentList().clear();
+             * v.getParentList().add(parent); parent.getChildList().add(v); }
+             * for (Vertex v : temp) {
+             *
+             * if (!v.getAttribute("NAME").equals("create_array_expr")) {
+             * v.getParentList().clear(); v.getParentList().add(parent);
+             * parent.getChildList().add(v); } }
+             */
             //вуаля
         }
 
@@ -1936,8 +2238,9 @@ public class Semantic {
         fillConstantsTable();
 
         fillLocalsTable();
+        addMultiArraysToConstants();
 
-        boolean fdgd = true;
+
     }
 
     public static void checks() {
@@ -1960,7 +2263,9 @@ public class Semantic {
                     || vx.containsAttribute("TYPE") == true
                     || vx.getAttribute("NAME").equals("create_stmt_list")
                     || vx.getAttribute("NAME").equals("append_stmt_to_list")
-                    || vx.getAttribute("NAME").equals("create_from_arg_rezvalue")) {
+                    || vx.getAttribute("NAME").equals("create_from_arg_rezvalue")
+                    || vx.getAttribute("NAME").equals("create_function_call")
+                    || vx.getAttribute("NAME").equals("create_expr_list")) {
                 continue;
             } else {
 
@@ -2080,7 +2385,7 @@ public class Semantic {
         ByteBuffer commands = ByteBuffer.allocate(10);
 
 
-        commands.put(CG.ALOAD0);
+        commands.put(CG.ALOAD_0);
         commands.put(CG.INVOKESPECIAL);
         commands.putShort(m_initMethodRefID);
         commands.put(CG.RETURN);
@@ -2110,22 +2415,27 @@ public class Semantic {
 
         try {
             Thread.sleep(100);
+
+
         } catch (InterruptedException ex) {
             Logger.getLogger(Semantic.class.getName()).log(Level.SEVERE, null, ex);
         }
 
 
-        System.out.print("Таблица констант:\n");
-        constantsTable.printTable();
+        /*
+         * System.out.print("Таблица констант:\n"); constantsTable.printTable();
+         */
         // System.out.print("\nТаблица функций:\n"); fpTable.printTable();
-        System.out.print("\nТаблица локальных переменных:\n");
-        localsTable.printTable();
+     /*
+         * System.out.print("\nТаблица локальных переменных:\n");
+         * localsTable.printTable();
+         */
         //processParamListOnTables();
 
 
 
-        // transformTree();
-        // g.printInfo();
+        transformTree();
+        //g.printInfo();
 
 
         if (allRight == true) {
@@ -2142,12 +2452,20 @@ public class Semantic {
                 generator.writeInterfaces();
                 generator.writeFields();
 
-                generator.giantSwitch();
+                generator.recursive(g.getRoot());
 
                 generator.writeMethods();
                 generator.writeAttributes();
 
                 generator.close();
+
+
+
+
+
+
+
+
             } catch (IOException ex) {
                 Logger.getLogger(Semantic.class.getName()).log(Level.SEVERE, null, ex);
             }

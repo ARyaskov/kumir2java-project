@@ -229,7 +229,9 @@ void makeNode(char* from, char* to)
         _0x1F[0] = '\x1F';
         fprintf(locsfile,_0x1F);
         char buf[10]= {};
+
         sprintf(buf, "%d", yylloc.first_line);
+       printf("Line:%s\n",buf);
         fprintf(locsfile, buf);
         fprintf(locsfile, "\n");
 
@@ -752,7 +754,7 @@ struct NExpr* create_const_expr (enum Const_type type, union Const_values value)
 
 
         char buf0[10]= {};
-        sprintf(buf0, "\"%s\"", value.Char);
+        sprintf(buf0, "\"%c\"", value.Char);
         fprintf(locsfile, buf0);
 
         char _0x1F[2];
@@ -1370,10 +1372,12 @@ struct NDimensions* create_int_int_dim(int first,int second)
     result->last = dim;
 
 #ifdef OUT2DOT
-    char* buf1[10]= {};
-    char* buf2[10]= {};
-    itoa(first, (char*)buf1, 10);
-    itoa(second, (char*)buf2, 10);
+    char* buf1[6]= {};
+    char* buf2[6]= {};
+
+    sprintf(buf1, "%d",first);
+    sprintf(buf2, "%d",second);
+
     makeNode(result->print_val, strcat_const("Целое число: ", (char*)buf1));
     makeNode(result->print_val, strcat_const("Целое число: ", (char*)buf2));
 #endif
@@ -1408,7 +1412,7 @@ struct NDimensions* create_int_id_dim(int first,struct NIdentifier* second)
     result->last = dim;
 
 #ifdef OUT2DOT
-    char* buf1[10]= {};
+    char* buf1[6]= {};
     itoa(first, (char*)buf1, 10);
     makeNode(result->print_val, strcat_const("Целое число: ", (char*)buf1));
     makeNode(result->print_val, second->print_val);
@@ -1708,15 +1712,16 @@ struct NEnum_array_identifier_list* append_enum_array_identifier_list(struct NEn
             tempArrayId->id = id;
             strcpy(tempArrayId->print_val, id->print_val);
             list->last->next = tempArrayId;
-            list->last->dimensions = dimensions;
-            list->last = tempArrayId;
 
+            list->last = tempArrayId;
+            list->last->dimensions = dimensions;
 
 #ifdef OUT2DOT
             uniqID = makeUniqueID("append_enum_array_identifier_list");
             // list->print_val = uniqID;
             makeNode(list->print_val, uniqID);
             makeNode(uniqID, tempArrayId->print_val);
+            makeNode(uniqID, list->last->dimensions->print_val);
 #endif
 
         }

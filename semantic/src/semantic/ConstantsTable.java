@@ -146,7 +146,66 @@ public class ConstantsTable {
                     }
                 }
             }
-        } else if (type.equals("UTF-8")) {
+        } else if (type.equals("Class")) {
+            Iterator it = rows.iterator();
+            while (it.hasNext()) {
+                ConstantsTableRow row = (ConstantsTableRow) it.next();
+                if (row.getType().equals(type)) {
+                    String _temp = row.getValue().toString();
+                    int id = Integer.valueOf(_temp).intValue();
+                    ConstantsTableRow tempRow = Semantic.constantsTable.getRowById(id);
+                    String altName = tempRow.getStringValue();
+                    if (altName.equals(name)) {
+                        result = row;
+                        break;
+                    }
+                }
+            }
+        }        if (type.equals("String")) {
+            Iterator it = rows.iterator();
+            while (it.hasNext()) {
+                ConstantsTableRow row = (ConstantsTableRow) it.next();
+                if (row.getType().equals(type)) {
+                    int id = Integer.valueOf((String) row.getValue()).intValue();
+                    ConstantsTableRow tempRow = Semantic.constantsTable.getRowById(id);
+                    String altName = tempRow.getStringValue();
+                    if (altName.equals(name)) {
+                        result = row;
+                        break;
+                    }
+                }
+            }
+        } else if (type.equals("INT")) {
+            Iterator it = rows.iterator();
+            while (it.hasNext()) {
+                ConstantsTableRow row = (ConstantsTableRow) it.next();
+                if (row.getType().equals(type)) {
+                    String _temp = row.getValue().toString();
+                   
+                    if (_temp.equals(name)) {
+                        result = row;
+                        break;
+                    }
+                }
+            }
+        }
+        else if (type.equals("MethodRef")) {
+            Iterator it = rows.iterator();
+            while (it.hasNext()) {
+                ConstantsTableRow row = (ConstantsTableRow) it.next();
+                if (row.getType().equals(type)) {
+                    String _temp = row.getValue().toString();
+                    String _nameAndTypeID = _temp.split(",")[1];
+                    ConstantsTableRow _nameAndTypeRow = this.getRowById(Integer.valueOf(_nameAndTypeID).intValue());
+                    int _idNameOfFun = Integer.valueOf(_nameAndTypeRow.getStringValue().split(",")[0]);
+                    ConstantsTableRow _funNameRow = this.getRowById(Integer.valueOf(_idNameOfFun).intValue());
+                    if (_funNameRow.getStringValue().equals(name)) {
+                        result = row;
+                        break;
+                    }
+                }
+            }
+        }else if (type.equals("UTF-8")) {
             result = getRowByName(name);
         }
         return result;

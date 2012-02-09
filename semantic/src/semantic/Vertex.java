@@ -2,6 +2,8 @@ package semantic;
 
 import java.io.*;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /*
  * Класс узла в дереве
@@ -11,6 +13,7 @@ public class Vertex {
     public static int vertexIDCount = 0;
     private int m_vertexID;
     private String m_idFromDOT = null;
+    public int enterNum = 0;
     /*
      * Таблица атрибутов - имя:значение
      */
@@ -41,6 +44,8 @@ public class Vertex {
      */
     private boolean m_hasType;
 
+ 
+    
     public void inheriteType() {
         Iterator it = m_childs.iterator();
         while (it.hasNext()) {
@@ -394,5 +399,80 @@ public class Vertex {
         m_parents = new ArrayList<Vertex>();
         m_vertexID = Semantic.vertexId++;
         m_childs = new ArrayList();
+    }
+
+    public boolean haveParent(String pureName) {
+        boolean result = false;
+
+        Iterator it = this.getParentList().iterator();
+        while (it.hasNext()) {
+            Vertex vxNow = (Vertex) it.next();
+
+            if (vxNow.getAttribute("NAME").equals(pureName)) {
+                result = true;
+            }
+        }
+
+        return result;
+    }
+
+    public boolean isLiesInPrintBranch(Vertex vx) {
+        boolean result = false;
+
+        if (vx.getAttribute("NAME").equals("create_stmt_list")) {
+            return result;
+        }
+
+        Iterator it = vx.getParentList().iterator();
+        while (it.hasNext()) {
+            Vertex vxNow = (Vertex) it.next();
+            if (vxNow.getAttribute("NAME").equals("create_stmt_print")) {
+                result = true;
+                break;
+            } else {
+                result = isLiesInPrintBranch(vxNow);
+                if (result == true) {
+                    break;
+                }
+            }
+        }
+
+
+        return result;
+    }
+      public boolean isLiesInArrAssBranch(Vertex vx) {
+        boolean result = false;
+
+        if (vx.getAttribute("NAME").equals("create_stmt_list")) {
+            return result;
+        }
+
+        Iterator it = vx.getParentList().iterator();
+        while (it.hasNext()) {
+            Vertex vxNow = (Vertex) it.next();
+            if (vxNow.getAttribute("NAME").equals("[]:=")) {
+                result = true;
+                break;
+            } else {
+                result = isLiesInArrAssBranch(vxNow);
+                if (result == true) {
+                    break;
+                }
+            }
+        }
+
+
+        return result;
+    }
+    
+    public Vertex generateNLevelParent(int n){
+        Vertex result = this.getParentList().get(0);
+        
+        for (int i =0;i<n;i++){
+            result = result.getParentList().get(0);
+                    
+        }
+        
+        return result;
     }
 }

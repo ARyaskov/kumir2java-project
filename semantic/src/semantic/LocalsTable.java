@@ -14,13 +14,63 @@ public class LocalsTable {
         nodes.add(row);
     }
 
-    public LocalsTableRow getRowByName(String name) {
+    public LocalsTableRow getRowByName(String in_name) {
         LocalsTableRow result = null;
 
         Iterator it = nodes.iterator();
         while (it.hasNext()) {
             LocalsTableRow row = (LocalsTableRow) it.next();
-            if (row.getValue().equals(name)) {
+            String name = (String) row.getValue();
+            // name = name.split("\\[")[0];
+            if (name.equals(in_name)) {
+                result = row;
+                break;
+            }
+        }
+        return result;
+    }
+
+    public LocalsTableRow getRowByFunIDAndName(String funId, String in_name) {
+        LocalsTableRow result = null;
+
+        Iterator it = nodes.iterator();
+        while (it.hasNext()) {
+            LocalsTableRow row = (LocalsTableRow) it.next();
+            String name = (String) row.getValue();
+            int _funID = Integer.valueOf(funId).intValue();
+            // name = name.split("\\[")[0];
+            if (name.equals(in_name) && row.getFuncID() == _funID) {
+                result = row;
+                break;
+            }
+        }
+        return result;
+    }
+
+    public LocalsTableRow getRowByFunIDAndName(int funId, String in_name) {
+        LocalsTableRow result = null;
+
+        Iterator it = nodes.iterator();
+        while (it.hasNext()) {
+            LocalsTableRow row = (LocalsTableRow) it.next();
+            String name = (String) row.getValue();
+
+            // name = name.split("\\[")[0];
+            if (name.equals(in_name) && row.getFuncID() == funId) {
+                result = row;
+                break;
+            }
+        }
+        return result;
+    }
+
+    public LocalsTableRow getRowByID(int id) {
+        LocalsTableRow result = null;
+
+        Iterator it = nodes.iterator();
+        while (it.hasNext()) {
+            LocalsTableRow row = (LocalsTableRow) it.next();
+            if (row.getID() == id) {
                 result = row;
                 break;
             }

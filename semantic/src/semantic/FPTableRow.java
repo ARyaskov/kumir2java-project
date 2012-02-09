@@ -15,27 +15,33 @@ public class FPTableRow {
 
     public FPTableRow(int idConstTable, String name, String returnType, int countPar, ArrayList<String> pars) {
         m_constTableID = idConstTable;
-        
-        
-        
+
+
+
         m_ID = idCount++;
         m_name = name;
-        if (returnType!=null)
+        if (returnType != null) {
             m_returnType = returnType;
-        else
+        } else {
             m_returnType = "V";
+        }
         m_parCount = countPar;
         m_parTypes = pars;
         m_descriptor = makeDescriptor(pars, m_returnType);
-     /*   System.out.print("TEST\n");
-        this.printRow();*/
-
+        /*
+         * System.out.print("TEST\n"); this.printRow();
+         */
+        translateTypes();
     }
 
-    public static String makeDescriptor(ArrayList<String> parTypes, String ret) {
+    public final void translateTypes() {
+        ArrayList<String> newPars = new ArrayList();
         String temp = "";
-        temp += "(";
-        for (String s : parTypes) {
+        for (String s : m_parTypes) {
+            String[] _sArr = s.split("\\[");
+            for (int i = 1; i < _sArr.length; i++) {
+                temp += "[";
+            }
             if (s.equals("цел")) {
                 temp += "I";
             } else if (s.equals("сим")) {
@@ -44,29 +50,72 @@ public class FPTableRow {
                 temp += "Ljava/lang/String;";
             } else if (s.equals("лог")) {
                 temp += "Z";
-            } else if (s.equals("целтаб")) {
-                temp += "[I";
-            } else if (s.equals("симтаб")) {
-                temp += "[C";
-            } else if (s.equals("литтаб")) {
-                temp += "[Ljava/lang/String;";
-            } else if (s.equals("логтаб")) {
-                temp += "[Z";
+            } else if (s.equals("вещ")) {
+                temp += "D";
+            } else if (s.indexOf("целтаб") != -1) {
+                temp += "I";
+            } else if (s.indexOf("симтаб") != -1) {
+                temp += "C";
+            } else if (s.indexOf("литтаб") != -1) {
+                temp += "Ljava/lang/String;";
+            } else if (s.indexOf("логтаб") != -1) {
+                temp += "Z";
+            } else if (s.indexOf("вещтаб") != -1) {
+                temp += "D";
+            }
+            newPars.add(temp);
+            temp="";
+        }
+
+        m_parTypes = newPars;
+    }
+
+    public static String makeDescriptor(ArrayList<String> parTypes, String ret) {
+        String temp = "";
+        temp += "(";
+        for (String s : parTypes) {
+            String[] _sArr = s.split("\\[");
+            for (int i = 1; i < _sArr.length; i++) {
+                temp += "[";
             }
 
+            if (s.equals("цел")) {
+                temp += "I";
+            } else if (s.equals("сим")) {
+                temp += "C";
+            } else if (s.equals("вещ")) {
+                temp += "D";
+            } else if (s.equals("лит")) {
+                temp += "Ljava/lang/String;";
+            } else if (s.equals("лог")) {
+                temp += "Z";
+            } else if (s.indexOf("целтаб") != -1) {
 
+                temp += "I";
+            } else if (s.indexOf("вещтаб") != -1) {
+
+                temp += "D";
+            } else if (s.indexOf("симтаб") != -1) {
+
+                temp += "C";
+            } else if (s.indexOf("литтаб") != -1) {
+
+                temp += "Ljava/lang/String;";
+            } else if (s.indexOf("логтаб") != -1) {
+
+                temp += "Z";
+            }
         }
         temp += ")";
         /*
          * if (m_returnType.equals("цел")) { temp += "I"; } else if
          * (m_returnType.equals("сим")) { temp += "C"; } else if
          * (m_returnType.equals("лит")) { temp += "Ljava/lang/String;"; } else
-         * if (m_returnType.equals("лог")) { temp += "B";
-        }
+         * if (m_returnType.equals("лог")) { temp += "B"; }
          */
         temp += ret;
         return temp;
-        
+
     }
 
     public void setName(String newName) {
@@ -80,9 +129,10 @@ public class FPTableRow {
         m_returnType = type;
     }
 
-       public void setID(int id) {
+    public void setID(int id) {
         m_ID = id;
     }
+
     public void setParCount(int count) {
         m_parCount = count;
     }

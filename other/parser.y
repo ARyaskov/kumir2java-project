@@ -1,13 +1,13 @@
 %{
 
 
-    #include "..\headers\parser.tab.h"
+#include "..\headers\parser.tab.h"
 
 
 #include "..\headers\tree_structs.h"
 #include "..\headers\tree_funcs.h"
 
-extern int yylex(void);
+    extern int yylex(void);
 
 #define YYERROR_VERBOSE
     extern void yyerror (char const* s);
@@ -18,14 +18,14 @@ extern int yylex(void);
 
     FILE * errfile = NULL;
 
-	extern void init_safeAlloc();
-	extern int yyparse();
+    extern void init_safeAlloc();
+    extern int yyparse();
 
 
 
 
 
-%}
+    %}
 
 %debug
 %locations
@@ -119,7 +119,7 @@ extern int yylex(void);
 
 program:
 stmt_list  {$$=create_program($1);
-            }
+           }
 ;
 
 stmt_list:
@@ -133,17 +133,17 @@ stmt:
 ENDL               {$$=create_stmt_expr(NULL);
                    }
 | expr_list ENDL     {$$=create_stmt_expr_list($1);
-                   }
+                     }
 | func_stmt        {$$=create_stmt_func($1);
                    }
 | proc_stmt        {$$=create_stmt_proc($1);
                    }
 | print     {$$=create_stmt_print($1);
-                       }
+            }
 | read      {$$=create_stmt_read($1);
-                      }
+            }
 | znach_value  ENDL    {$$=create_stmt_znach($1);
-                   }
+                       }
 | decl             {$$=create_stmt_decl($1);
                    }
 ;
@@ -213,12 +213,14 @@ function_call                {$$=create_function_call_expr($1);
                               strcpy(value.Bool,"да");
                               $$=create_const_expr(Bool, value);
                              }
-| MINUS expr %prec UMINUS    {$$ = create_unary(UNARY, $2); }
+| MINUS expr %prec UMINUS    {$$ = create_unary(UNARY, $2);
+                             }
 
 | NS                         {union Const_values value;
                               value.String = (char*)safeAlloc(3);
                               strcpy(value.String,"нс");
-                              $$=create_const_expr(String, value);}
+                              $$=create_const_expr(String, value);
+                             }
 ;
 
 
@@ -241,11 +243,12 @@ ID
 ;
 
 decl:
-atomic_type enum_atomic_identifier_list ENDL           {
-                                                         $$=create_from_atomic_decl($1,$2);
-                                                         }
+atomic_type enum_atomic_identifier_list ENDL
+{
+    $$=create_from_atomic_decl($1,$2);
+}
 |  array_type enum_array_identifier_list ENDL           {$$=create_from_array_decl($1,$2);
-                                                          }
+                                                        }
 ;
 
 
@@ -253,27 +256,27 @@ enum_atomic_identifier_list :
 identifier                                   {$$=create_enum_atomic_identifier_list($1);
                                              }
 | enum_atomic_identifier_list ',' identifier 	             {$$=append_enum_atomic_identifier_list($1,$3);
-                                                       }
+                                                           }
 ;
 
 enum_array_identifier_list :
 identifier '[' dimensions ']'                       {$$=create_enum_array_identifier_list($1,$3);
                                                     }
 | enum_array_identifier_list ',' identifier '[' dimensions ']' {$$=append_enum_array_identifier_list($1,$3,$5);
-                                                           }
+                                                               }
 ;
 
 func_stmt:
 ALG atomic_type identifier ENDL NACH ENDL stmt_list KON ENDL          {$$=create_func($2, $3,NULL, $7);
-                                                                                       }
+                                                                      }
 | ALG atomic_type identifier '(' param_list ')' ENDL NACH stmt_list KON ENDL {$$=create_func($2, $3,$5, $9);
-                                                                                         }
+                                                                             }
 ;
 proc_stmt:
 ALG identifier ENDL NACH ENDL stmt_list KON ENDL                      {$$=create_proc($2, NULL , $6);
-                                                                            }
+                                                                      }
 | ALG identifier '(' param_list ')' ENDL NACH ENDL stmt_list KON ENDL  {$$=create_proc($2,$4,$9);
-                                                                             }
+                                                                       }
 ;
 
 param_list:
@@ -285,7 +288,7 @@ param                                        {$$=create_param_list($1);
 
 znach_value:
 ZNACH ASSMNT expr                        {$$=create_znachvalue($3);
-                                            }
+                                         }
 ;
 
 param:
@@ -296,16 +299,16 @@ arg_value                                         {$$=create_from_arg_rezvalue($
 ;
 arg_value:
 ARG atomic_type enum_atomic_identifier_list     {$$=create_arg_from_atomic($2, $3);
-                                                        }
+                                                }
 | ARG array_type enum_array_identifier_list      {$$=create_arg_from_array($2, $3);
-                                                         }
+                                                 }
 ;
 
 rez_value:
 REZ array_type enum_array_identifier_list      {$$=create_rez_from_array($2, $3);
-                                                       }
+                                               }
 | REZ atomic_type enum_atomic_identifier_list   {$$=create_rez_from_atomic($2, $3);
-                                                        }
+                                                }
 ;
 
 
@@ -350,11 +353,11 @@ CEL  {$$=create_atomic_type("цел");
 
 print:
 VYVOD expr_list ENDL  {$$=create_expr_list_print($2);
-                        }
+                      }
 ;
 read:
 VVOD expr_list  ENDL  {$$=create_expr_list_read($2);
-                        }
+                      }
 ;
 
 %%
@@ -369,14 +372,14 @@ void yyerror (char const* s)
 
 int main (int argc, char* argv[])
 {
- char* buf;
- int i;
- init_safeAlloc();
- buf= (char*)safeAlloc(100);
+    char* buf;
+    int i;
+    init_safeAlloc();
+    buf= (char*)safeAlloc(100);
 
-   safeAllocPointer=0;
+    safeAllocPointer=0;
 
-prevSalt=0;
+    prevSalt=0;
 
 
 
@@ -389,10 +392,10 @@ prevSalt=0;
 
     if (argc == 1)
     {
-     /*  argv[1]=(char*)safeAlloc(1);
-	   argv[2]=(char*)safeAlloc(1);
-	   strcpy(argv[1],"..\\unittests\\procsAndFuncs2.kum");
-	   strcpy(argv[2],"..\\unittests\\procsAndFuncs2.dot");*/
+        /*  argv[1]=(char*)safeAlloc(1);
+          argv[2]=(char*)safeAlloc(1);
+          strcpy(argv[1],"..\\unittests\\procsAndFuncs2.kum");
+          strcpy(argv[2],"..\\unittests\\procsAndFuncs2.dot");*/
 
         exit(1);
     }
@@ -400,12 +403,15 @@ prevSalt=0;
     dotfile = fopen(argv[2], "w+");
 
     before_val = (char*)malloc(ALLOC_SZ);
-    freopen("output\\err.txt","w",stderr);
+
+
+    freopen("err.txt","w",stderr);
+
     strcpy(buf, "digraph KumirTree { \n");
     fwrite(buf,1,strlen("graph KumirTree { \n"),dotfile);
     // FILE* file;
-
-    logfile = fopen("output\\log.txt", "wt");
+    //printf("TUT");
+    logfile = fopen("log.txt", "w+");
 
     char* locBuf = safeAlloc(1);
 
@@ -429,6 +435,11 @@ prevSalt=0;
     // getchar();
     return 0;
 }
+
+
+
+
+
 
 
 

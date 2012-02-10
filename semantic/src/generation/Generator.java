@@ -587,6 +587,8 @@ public class Generator {
          */
         String type = m_typeStack.pop().toString();
 
+        type = translateType(type);
+        
         if (type.equals("INT")) {
             idMethodRef = findIdForMethodRef("RTL", "ku_print", "(I)V");
         } else if (type.equals("CHAR")) {
@@ -759,8 +761,9 @@ public class Generator {
         String vxName = vx.getAttribute("NAME");
         String vxType = vx.getAttribute("TYPE");
         String vxTypeOfSymbol = vx.getTypeOfSymbol();
-    
+
         System.out.printf("%s - %s\n", vxName, m_typeStack.toString());
+        System.out.printf("IDSTACK: %s\n", m_idStack.toString());
         switch (vxName) {
             default: {
                 if (vxName.equals("процедура")) {
@@ -925,7 +928,9 @@ public class Generator {
                 String nameOf2Par = vx.getParentList().get(0).getParentList().get(0).getAttribute("NAME");
                 if (nameOf2Par.equals("create_expr_list_print") && m_typeStack.empty() != true) {
                     specialForPrintExprList();
-                    m_typeStack.pop();
+                    if (m_typeStack.empty() != true) {
+                        m_typeStack.pop();
+                    }
                 }
                 if (nameOf2Par.equals("create_function_call") && m_typeStack.empty() != true) {
                 }
@@ -960,6 +965,7 @@ public class Generator {
             }
             break;
             case "create_func": {
+                curZnachType = translateType(curZnachType);
                 if (curZnachType.equals("INT")) {
                     m_commands.put(CG.IRETURN);
                 } else if (curZnachType.equals("DOUBLE")) {
@@ -1036,6 +1042,7 @@ public class Generator {
                     String _name = m_idStack.pop().toString();
                     int id = Integer.valueOf(Semantic.localsTable.getRowByFunIDAndName(funID, _name).getID()).intValue();
                     loadAFromLocalVar((byte) id);
+                    m_typeStack.pop();
                     vx.enterNum++;
                 } else if (_par.equals("create_expr_id") && vx.getParentList().get(vx.enterNum).getParentList().get(0).getAttribute("NAME").equals(":=") != true) {
                     // здесь генерация кода для вызова процедуры или значения rvalue-переменной
@@ -1075,7 +1082,10 @@ public class Generator {
 
                     vx.enterNum++;
                 }
+                /////
 
+              
+//////
 
             }
             break;
@@ -1213,12 +1223,14 @@ public class Generator {
             break;
 
             case "+": {
-                if (m_typeStack.get(m_typeStack.size() - 2).toString().equals("INT")
+                if (m_typeStack.isEmpty()!=true && m_typeStack.get(m_typeStack.size() - 2).toString().equals("INT")
                         && m_typeStack.get(m_typeStack.size() - 1).toString().equals("INT")) {
                     m_commands.put(CG.IADD);
-                    m_typeStack.pop();
-                } else if (m_typeStack.get(0).toString().equals("DOUBLE")
-                        && m_typeStack.get(1).toString().equals("DOUBLE")) {
+                    if (m_typeStack.isEmpty() != true) {
+                        m_typeStack.pop();
+                    }
+                } else if (m_typeStack.isEmpty()!=true  && m_typeStack.get(m_typeStack.size() - 2).toString().equals("DOUBLE")
+                        && m_typeStack.get(m_typeStack.size() - 1).toString().equals("DOUBLE")) {
                     m_commands.put(CG.DADD);
                     m_typeStack.pop();
                 }

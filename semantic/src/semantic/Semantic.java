@@ -1267,8 +1267,19 @@ public class Semantic {
             Iterator childIter = vxNow.getChildList().iterator();
             while (childIter.hasNext()) {
                 Vertex vxCh = (Vertex) childIter.next();
-                if (vxCh.getAttribute("TYPE").equals("цел") == false
-                        && vxCh.getAttribute("NAME").equals("create_expr_list")) {
+                String _str = vxCh.getAttribute("NAME");
+                if (vxCh.getAttribute("TYPE") == null) {
+                    while (vxCh.getChildList().isEmpty()!=true) {
+                        if (vxCh.getAttribute("TYPE") == null) {
+                            vxCh = vxCh.getChildList().get(0);
+                        }
+                    }
+                }
+                String _strAfter = vxCh.getAttribute("NAME");
+           /*     if (vxCh.getAttribute("TYPE").equals("цел") == false
+                        && vxCh.getAttribute("NAME").equals("create_expr_list"))*/
+                if (constantsTable.getRowByTypeAndName("String", _strAfter) != null &&
+                        constantsTable.getRowByTypeAndName("INT", _strAfter) == null){
                     Integer loc = locations.get(vxNow.getVirginName());
                     String erMess = "Индексы массива должны быть целыми числами!";
                     Vertex result = new Vertex();
@@ -2048,7 +2059,22 @@ public class Semantic {
 
                 }
                 FPTableRow nowRow = fpTable.getRowByName(name);
-                if (nowRow != null && listTypes.containsAll(nowRow.getParTypes()) == false) {
+                Iterator _it = listTypes.iterator();
+                ArrayList<String> backupTypes = new ArrayList();
+                while (_it.hasNext()) {
+                    String typeNow = (String) _it.next();
+                    String strNow = translateTypeTo1Char(typeNow);
+                    backupTypes.add(strNow);
+                }
+                listTypes = backupTypes;
+                for (int g = 0; g < listTypes.size(); g++) {
+                    if (listTypes.get(g) == null) {
+                        listTypes.remove(g);
+                    } else if (listTypes.get(g).isEmpty()) {
+                        listTypes.remove(g);
+                    }
+                }
+                if (listTypes.isEmpty() != true && nowRow != null && listTypes.containsAll(nowRow.getParTypes()) == false) {
                     String errMess = "Вызов функции/процедуры \"" + name + "\" не соответствует определению по типам параметров";
                     Integer loc = locations.get(vx.getVirginName());
                     String err = makeErrorMessage(filename, loc, errMess);
@@ -2061,6 +2087,33 @@ public class Semantic {
 
             }
         }
+    }
+
+    public static String translateTypeTo1Char(String str) {
+        String result = "";
+        if (str != null) {
+            switch (str) {
+                case "лит":
+                    result = "Ljava/lang/String;";
+                    break;
+                case "цел":
+                    result = "I";
+                    break;
+                case "вещ":
+                    result = "D";
+                    break;
+                case "лог":
+                    result = "Z";
+                    break;
+                case "сим":
+                    result = "C";
+                    break;
+
+
+            }
+        }
+
+        return result;
     }
 
     public static void swap(ArrayList<Vertex> vxs, int index1, int index2) {
@@ -2259,7 +2312,7 @@ public class Semantic {
             if (vx.getAttribute("NAME").equals("create_func")
                     || vx.getAttribute("NAME").equals("create_proc")
                     || vx.getTypeOfSymbol().equals("TYPE")
-                    || vx.getTypeOfSymbol().equals("OPERATION")
+                   /* || vx.getTypeOfSymbol().equals("OPERATION")*/
                     || vx.containsAttribute("TYPE") == true
                     || vx.getAttribute("NAME").equals("create_stmt_list")
                     || vx.getAttribute("NAME").equals("append_stmt_to_list")
@@ -2363,9 +2416,29 @@ public class Semantic {
 
         for (Vertex vx : list) {
             if (vx.getChildList().size() == 2) {
+                String nameVx = vx.getAttribute("NAME");
+                String nameVx1 = vx.getChildList().get(0).getAttribute("NAME");
+                String nameVx2 = vx.getChildList().get(1).getAttribute("NAME");
 
-                if (!vx.getChildList().get(0).getAttribute("TYPE").equals(
-                        vx.getChildList().get(1).getAttribute("TYPE"))) {
+                Vertex childVX1 = vx.getChildList().get(0);
+                Vertex childVX2 = vx.getChildList().get(1);
+                if (childVX1.getAttribute("TYPE") == null) {
+                    while (childVX1.getChildList().isEmpty()!=true) {
+                        if (childVX1.getAttribute("TYPE") == null) {
+                            childVX1 = childVX1.getChildList().get(0);
+                        }
+                    }
+                }
+               if (childVX2.getAttribute("TYPE") == null) {
+                    while (childVX2.getChildList().isEmpty()!=true) {
+                        if (childVX2.getAttribute("TYPE") == null) {
+                            childVX2 = childVX2.getChildList().get(0);
+                        }
+                    }
+                }
+
+                if (!childVX1.getAttribute("TYPE").equals(
+                        childVX2.getAttribute("TYPE"))) {
                     String errMess = "Операнды у \"" + vx.getAttribute("NAME") + "\"" + " имеют разные типы";
                     Integer loc = locations.get(vx.getVirginName());
                     String err = makeErrorMessage(filename, loc, errMess);
@@ -2409,7 +2482,7 @@ public class Semantic {
 
         init();
         populateTypes();
-        //     checks();
+     //   checks();
         cutLocalsFromConstants();
 
 

@@ -588,7 +588,7 @@ public class Generator {
         String type = m_typeStack.pop().toString();
 
         type = translateType(type);
-        
+
         if (type.equals("INT")) {
             idMethodRef = findIdForMethodRef("RTL", "ku_print", "(I)V");
         } else if (type.equals("CHAR")) {
@@ -862,6 +862,10 @@ public class Generator {
             case "create_stmt_znach": {
             }
             break;
+            case "create_program": {
+                int forBreakpoint = 1;
+            }
+            break;
             case "create_expr_list_print": {
                 /*
                  * if (m_typeStack.empty() != true &&
@@ -950,7 +954,9 @@ public class Generator {
                 String nameOf3Par = vx.generateNLevelParent(2).getAttribute("NAME");
                 if (nameOf2Par.equals("create_expr_list_print") || nameOf3Par.equals("create_expr_list_print")) {
                     specialForPrintExprList();
-                    m_typeStack.pop();
+                    if (m_typeStack.isEmpty() != true) {
+                        m_typeStack.pop();
+                    }
                 }
             }
             break;
@@ -1084,7 +1090,7 @@ public class Generator {
                 }
                 /////
 
-              
+
 //////
 
             }
@@ -1223,13 +1229,13 @@ public class Generator {
             break;
 
             case "+": {
-                if (m_typeStack.isEmpty()!=true && m_typeStack.get(m_typeStack.size() - 2).toString().equals("INT")
+                if (m_typeStack.isEmpty() != true && m_typeStack.get(m_typeStack.size() - 2).toString().equals("INT")
                         && m_typeStack.get(m_typeStack.size() - 1).toString().equals("INT")) {
                     m_commands.put(CG.IADD);
                     if (m_typeStack.isEmpty() != true) {
                         m_typeStack.pop();
                     }
-                } else if (m_typeStack.isEmpty()!=true  && m_typeStack.get(m_typeStack.size() - 2).toString().equals("DOUBLE")
+                } else if (m_typeStack.isEmpty() != true && m_typeStack.get(m_typeStack.size() - 2).toString().equals("DOUBLE")
                         && m_typeStack.get(m_typeStack.size() - 1).toString().equals("DOUBLE")) {
                     m_commands.put(CG.DADD);
                     m_typeStack.pop();
@@ -1275,6 +1281,7 @@ public class Generator {
             }
             break;
             case "**": {
+                
                 if (m_typeStack.get(m_typeStack.size() - 2).toString().equals("INT")
                         && m_typeStack.get(m_typeStack.size() - 1).toString().equals("INT")) {
                     m_commands.put(CG.INVOKESTATIC);

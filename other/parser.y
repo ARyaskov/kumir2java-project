@@ -120,6 +120,7 @@
 program:
 stmt_list  {$$=create_program($1);
            }
+
 ;
 
 stmt_list:
@@ -267,15 +268,15 @@ identifier '[' dimensions ']'                       {$$=create_enum_array_identi
 ;
 
 func_stmt:
-ALG atomic_type identifier ENDL NACH ENDL stmt_list KON ENDL          {$$=create_func($2, $3,NULL, $7);
+ALG atomic_type identifier ENDL NACH ENDL stmt_list KON          {$$=create_func($2, $3,NULL, $7);
                                                                       }
-| ALG atomic_type identifier '(' param_list ')' ENDL NACH stmt_list KON ENDL {$$=create_func($2, $3,$5, $9);
+| ALG atomic_type identifier '(' param_list ')' ENDL NACH stmt_list KON {$$=create_func($2, $3,$5, $9);
                                                                              }
 ;
 proc_stmt:
-ALG identifier ENDL NACH ENDL stmt_list KON ENDL                      {$$=create_proc($2, NULL , $6);
+ALG identifier ENDL NACH ENDL stmt_list KON                      {$$=create_proc($2, NULL , $6);
                                                                       }
-| ALG identifier '(' param_list ')' ENDL NACH ENDL stmt_list KON ENDL  {$$=create_proc($2,$4,$9);
+| ALG identifier '(' param_list ')' ENDL NACH ENDL stmt_list KON  {$$=create_proc($2,$4,$9);
                                                                        }
 ;
 

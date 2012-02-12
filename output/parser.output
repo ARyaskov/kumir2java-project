@@ -58,11 +58,11 @@ Grammar
    45 enum_array_identifier_list: identifier '[' dimensions ']'
    46                           | enum_array_identifier_list ',' identifier '[' dimensions ']'
 
-   47 func_stmt: ALG atomic_type identifier ENDL NACH ENDL stmt_list KON ENDL
-   48          | ALG atomic_type identifier '(' param_list ')' ENDL NACH stmt_list KON ENDL
+   47 func_stmt: ALG atomic_type identifier ENDL NACH ENDL stmt_list KON
+   48          | ALG atomic_type identifier '(' param_list ')' ENDL NACH stmt_list KON
 
-   49 proc_stmt: ALG identifier ENDL NACH ENDL stmt_list KON ENDL
-   50          | ALG identifier '(' param_list ')' ENDL NACH ENDL stmt_list KON ENDL
+   49 proc_stmt: ALG identifier ENDL NACH ENDL stmt_list KON
+   50          | ALG identifier '(' param_list ')' ENDL NACH ENDL stmt_list KON
 
    51 param_list: param
    52           | param_list ';' param
@@ -298,10 +298,10 @@ state 6
 
 state 7
 
-   47 func_stmt: ALG . atomic_type identifier ENDL NACH ENDL stmt_list KON ENDL
-   48          | ALG . atomic_type identifier '(' param_list ')' ENDL NACH stmt_list KON ENDL
-   49 proc_stmt: ALG . identifier ENDL NACH ENDL stmt_list KON ENDL
-   50          | ALG . identifier '(' param_list ')' ENDL NACH ENDL stmt_list KON ENDL
+   47 func_stmt: ALG . atomic_type identifier ENDL NACH ENDL stmt_list KON
+   48          | ALG . atomic_type identifier '(' param_list ')' ENDL NACH stmt_list KON
+   49 proc_stmt: ALG . identifier ENDL NACH ENDL stmt_list KON
+   50          | ALG . identifier '(' param_list ')' ENDL NACH ENDL stmt_list KON
 
     ID     shift, and go to state 6
     VESCH  shift, and go to state 9
@@ -692,8 +692,8 @@ state 41
 
 state 42
 
-   49 proc_stmt: ALG identifier . ENDL NACH ENDL stmt_list KON ENDL
-   50          | ALG identifier . '(' param_list ')' ENDL NACH ENDL stmt_list KON ENDL
+   49 proc_stmt: ALG identifier . ENDL NACH ENDL stmt_list KON
+   50          | ALG identifier . '(' param_list ')' ENDL NACH ENDL stmt_list KON
 
     ENDL  shift, and go to state 72
     '('   shift, and go to state 73
@@ -701,8 +701,8 @@ state 42
 
 state 43
 
-   47 func_stmt: ALG atomic_type . identifier ENDL NACH ENDL stmt_list KON ENDL
-   48          | ALG atomic_type . identifier '(' param_list ')' ENDL NACH stmt_list KON ENDL
+   47 func_stmt: ALG atomic_type . identifier ENDL NACH ENDL stmt_list KON
+   48          | ALG atomic_type . identifier '(' param_list ')' ENDL NACH stmt_list KON
 
     ID  shift, and go to state 6
 
@@ -1177,14 +1177,14 @@ state 71
 
 state 72
 
-   49 proc_stmt: ALG identifier ENDL . NACH ENDL stmt_list KON ENDL
+   49 proc_stmt: ALG identifier ENDL . NACH ENDL stmt_list KON
 
     NACH  shift, and go to state 99
 
 
 state 73
 
-   50 proc_stmt: ALG identifier '(' . param_list ')' ENDL NACH ENDL stmt_list KON ENDL
+   50 proc_stmt: ALG identifier '(' . param_list ')' ENDL NACH ENDL stmt_list KON
 
     ARG  shift, and go to state 100
     REZ  shift, and go to state 101
@@ -1197,8 +1197,8 @@ state 73
 
 state 74
 
-   47 func_stmt: ALG atomic_type identifier . ENDL NACH ENDL stmt_list KON ENDL
-   48          | ALG atomic_type identifier . '(' param_list ')' ENDL NACH stmt_list KON ENDL
+   47 func_stmt: ALG atomic_type identifier . ENDL NACH ENDL stmt_list KON
+   48          | ALG atomic_type identifier . '(' param_list ')' ENDL NACH stmt_list KON
 
     ENDL  shift, and go to state 106
     '('   shift, and go to state 107
@@ -1639,7 +1639,7 @@ state 98
 
 state 99
 
-   49 proc_stmt: ALG identifier ENDL NACH . ENDL stmt_list KON ENDL
+   49 proc_stmt: ALG identifier ENDL NACH . ENDL stmt_list KON
 
     ENDL  shift, and go to state 114
 
@@ -1686,7 +1686,7 @@ state 101
 
 state 102
 
-   50 proc_stmt: ALG identifier '(' param_list . ')' ENDL NACH ENDL stmt_list KON ENDL
+   50 proc_stmt: ALG identifier '(' param_list . ')' ENDL NACH ENDL stmt_list KON
    52 param_list: param_list . ';' param
 
     ')'  shift, and go to state 119
@@ -1716,14 +1716,14 @@ state 105
 
 state 106
 
-   47 func_stmt: ALG atomic_type identifier ENDL . NACH ENDL stmt_list KON ENDL
+   47 func_stmt: ALG atomic_type identifier ENDL . NACH ENDL stmt_list KON
 
     NACH  shift, and go to state 121
 
 
 state 107
 
-   48 func_stmt: ALG atomic_type identifier '(' . param_list ')' ENDL NACH stmt_list KON ENDL
+   48 func_stmt: ALG atomic_type identifier '(' . param_list ')' ENDL NACH stmt_list KON
 
     ARG  shift, and go to state 100
     REZ  shift, and go to state 101
@@ -1782,7 +1782,7 @@ state 113
 
 state 114
 
-   49 proc_stmt: ALG identifier ENDL NACH ENDL . stmt_list KON ENDL
+   49 proc_stmt: ALG identifier ENDL NACH ENDL . stmt_list KON
 
     BOOL_CONST    shift, and go to state 1
     INT_CONST     shift, and go to state 2
@@ -1869,7 +1869,7 @@ state 118
 
 state 119
 
-   50 proc_stmt: ALG identifier '(' param_list ')' . ENDL NACH ENDL stmt_list KON ENDL
+   50 proc_stmt: ALG identifier '(' param_list ')' . ENDL NACH ENDL stmt_list KON
 
     ENDL  shift, and go to state 132
 
@@ -1888,14 +1888,14 @@ state 120
 
 state 121
 
-   47 func_stmt: ALG atomic_type identifier ENDL NACH . ENDL stmt_list KON ENDL
+   47 func_stmt: ALG atomic_type identifier ENDL NACH . ENDL stmt_list KON
 
     ENDL  shift, and go to state 134
 
 
 state 122
 
-   48 func_stmt: ALG atomic_type identifier '(' param_list . ')' ENDL NACH stmt_list KON ENDL
+   48 func_stmt: ALG atomic_type identifier '(' param_list . ')' ENDL NACH stmt_list KON
    52 param_list: param_list . ';' param
 
     ')'  shift, and go to state 135
@@ -1940,7 +1940,7 @@ state 126
 state 127
 
     3 stmt_list: stmt_list . stmt
-   49 proc_stmt: ALG identifier ENDL NACH ENDL stmt_list . KON ENDL
+   49 proc_stmt: ALG identifier ENDL NACH ENDL stmt_list . KON
 
     BOOL_CONST    shift, and go to state 1
     INT_CONST     shift, and go to state 2
@@ -2027,7 +2027,7 @@ state 131
 
 state 132
 
-   50 proc_stmt: ALG identifier '(' param_list ')' ENDL . NACH ENDL stmt_list KON ENDL
+   50 proc_stmt: ALG identifier '(' param_list ')' ENDL . NACH ENDL stmt_list KON
 
     NACH  shift, and go to state 141
 
@@ -2041,7 +2041,7 @@ state 133
 
 state 134
 
-   47 func_stmt: ALG atomic_type identifier ENDL NACH ENDL . stmt_list KON ENDL
+   47 func_stmt: ALG atomic_type identifier ENDL NACH ENDL . stmt_list KON
 
     BOOL_CONST    shift, and go to state 1
     INT_CONST     shift, and go to state 2
@@ -2088,7 +2088,7 @@ state 134
 
 state 135
 
-   48 func_stmt: ALG atomic_type identifier '(' param_list ')' . ENDL NACH stmt_list KON ENDL
+   48 func_stmt: ALG atomic_type identifier '(' param_list ')' . ENDL NACH stmt_list KON
 
     ENDL  shift, and go to state 143
 
@@ -2127,22 +2127,22 @@ state 139
 
 state 140
 
-   49 proc_stmt: ALG identifier ENDL NACH ENDL stmt_list KON . ENDL
+   49 proc_stmt: ALG identifier ENDL NACH ENDL stmt_list KON .
 
-    ENDL  shift, and go to state 146
+    $default  reduce using rule 49 (proc_stmt)
 
 
 state 141
 
-   50 proc_stmt: ALG identifier '(' param_list ')' ENDL NACH . ENDL stmt_list KON ENDL
+   50 proc_stmt: ALG identifier '(' param_list ')' ENDL NACH . ENDL stmt_list KON
 
-    ENDL  shift, and go to state 147
+    ENDL  shift, and go to state 146
 
 
 state 142
 
     3 stmt_list: stmt_list . stmt
-   47 func_stmt: ALG atomic_type identifier ENDL NACH ENDL stmt_list . KON ENDL
+   47 func_stmt: ALG atomic_type identifier ENDL NACH ENDL stmt_list . KON
 
     BOOL_CONST    shift, and go to state 1
     INT_CONST     shift, and go to state 2
@@ -2157,7 +2157,7 @@ state 142
     VYVOD         shift, and go to state 11
     DA            shift, and go to state 12
     ZNACH         shift, and go to state 13
-    KON           shift, and go to state 148
+    KON           shift, and go to state 147
     LIT           shift, and go to state 14
     LITTAB        shift, and go to state 15
     LOG           shift, and go to state 16
@@ -2189,9 +2189,9 @@ state 142
 
 state 143
 
-   48 func_stmt: ALG atomic_type identifier '(' param_list ')' ENDL . NACH stmt_list KON ENDL
+   48 func_stmt: ALG atomic_type identifier '(' param_list ')' ENDL . NACH stmt_list KON
 
-    NACH  shift, and go to state 149
+    NACH  shift, and go to state 148
 
 
 state 144
@@ -2199,10 +2199,10 @@ state 144
    62 dimensions: dimensions ',' INT_CONST ':' . INT_CONST
    63           | dimensions ',' INT_CONST ':' . identifier
 
-    INT_CONST  shift, and go to state 150
+    INT_CONST  shift, and go to state 149
     ID         shift, and go to state 6
 
-    identifier  go to state 151
+    identifier  go to state 150
 
 
 state 145
@@ -2214,14 +2214,61 @@ state 145
 
 state 146
 
-   49 proc_stmt: ALG identifier ENDL NACH ENDL stmt_list KON ENDL .
+   50 proc_stmt: ALG identifier '(' param_list ')' ENDL NACH ENDL . stmt_list KON
 
-    $default  reduce using rule 49 (proc_stmt)
+    BOOL_CONST    shift, and go to state 1
+    INT_CONST     shift, and go to state 2
+    STRING_CONST  shift, and go to state 3
+    DOUBLE_CONST  shift, and go to state 4
+    CHAR_CONST    shift, and go to state 5
+    ID            shift, and go to state 6
+    ALG           shift, and go to state 7
+    VVOD          shift, and go to state 8
+    VESCH         shift, and go to state 9
+    VESCHTAB      shift, and go to state 10
+    VYVOD         shift, and go to state 11
+    DA            shift, and go to state 12
+    ZNACH         shift, and go to state 13
+    LIT           shift, and go to state 14
+    LITTAB        shift, and go to state 15
+    LOG           shift, and go to state 16
+    LOGTAB        shift, and go to state 17
+    NET           shift, and go to state 18
+    NS            shift, and go to state 19
+    SIM           shift, and go to state 20
+    SIMTAB        shift, and go to state 21
+    CEL           shift, and go to state 22
+    CELTAB        shift, and go to state 23
+    ENDL          shift, and go to state 24
+    MINUS         shift, and go to state 25
+    '('           shift, and go to state 26
+
+    stmt_list      go to state 151
+    stmt           go to state 29
+    expr           go to state 30
+    function_call  go to state 31
+    expr_list      go to state 32
+    identifier     go to state 33
+    decl           go to state 34
+    func_stmt      go to state 35
+    proc_stmt      go to state 36
+    znach_value    go to state 37
+    array_type     go to state 38
+    atomic_type    go to state 39
+    print          go to state 40
+    read           go to state 41
 
 
 state 147
 
-   50 proc_stmt: ALG identifier '(' param_list ')' ENDL NACH ENDL . stmt_list KON ENDL
+   47 func_stmt: ALG atomic_type identifier ENDL NACH ENDL stmt_list KON .
+
+    $default  reduce using rule 47 (func_stmt)
+
+
+state 148
+
+   48 func_stmt: ALG atomic_type identifier '(' param_list ')' ENDL NACH . stmt_list KON
 
     BOOL_CONST    shift, and go to state 1
     INT_CONST     shift, and go to state 2
@@ -2266,16 +2313,24 @@ state 147
     read           go to state 41
 
 
-state 148
-
-   47 func_stmt: ALG atomic_type identifier ENDL NACH ENDL stmt_list KON . ENDL
-
-    ENDL  shift, and go to state 153
-
-
 state 149
 
-   48 func_stmt: ALG atomic_type identifier '(' param_list ')' ENDL NACH . stmt_list KON ENDL
+   62 dimensions: dimensions ',' INT_CONST ':' INT_CONST .
+
+    $default  reduce using rule 62 (dimensions)
+
+
+state 150
+
+   63 dimensions: dimensions ',' INT_CONST ':' identifier .
+
+    $default  reduce using rule 63 (dimensions)
+
+
+state 151
+
+    3 stmt_list: stmt_list . stmt
+   50 proc_stmt: ALG identifier '(' param_list ')' ENDL NACH ENDL stmt_list . KON
 
     BOOL_CONST    shift, and go to state 1
     INT_CONST     shift, and go to state 2
@@ -2290,6 +2345,7 @@ state 149
     VYVOD         shift, and go to state 11
     DA            shift, and go to state 12
     ZNACH         shift, and go to state 13
+    KON           shift, and go to state 153
     LIT           shift, and go to state 14
     LITTAB        shift, and go to state 15
     LOG           shift, and go to state 16
@@ -2304,8 +2360,7 @@ state 149
     MINUS         shift, and go to state 25
     '('           shift, and go to state 26
 
-    stmt_list      go to state 154
-    stmt           go to state 29
+    stmt           go to state 50
     expr           go to state 30
     function_call  go to state 31
     expr_list      go to state 32
@@ -2320,24 +2375,10 @@ state 149
     read           go to state 41
 
 
-state 150
-
-   62 dimensions: dimensions ',' INT_CONST ':' INT_CONST .
-
-    $default  reduce using rule 62 (dimensions)
-
-
-state 151
-
-   63 dimensions: dimensions ',' INT_CONST ':' identifier .
-
-    $default  reduce using rule 63 (dimensions)
-
-
 state 152
 
     3 stmt_list: stmt_list . stmt
-   50 proc_stmt: ALG identifier '(' param_list ')' ENDL NACH ENDL stmt_list . KON ENDL
+   48 func_stmt: ALG atomic_type identifier '(' param_list ')' ENDL NACH stmt_list . KON
 
     BOOL_CONST    shift, and go to state 1
     INT_CONST     shift, and go to state 2
@@ -2352,7 +2393,7 @@ state 152
     VYVOD         shift, and go to state 11
     DA            shift, and go to state 12
     ZNACH         shift, and go to state 13
-    KON           shift, and go to state 155
+    KON           shift, and go to state 154
     LIT           shift, and go to state 14
     LITTAB        shift, and go to state 15
     LOG           shift, and go to state 16
@@ -2384,82 +2425,13 @@ state 152
 
 state 153
 
-   47 func_stmt: ALG atomic_type identifier ENDL NACH ENDL stmt_list KON ENDL .
-
-    $default  reduce using rule 47 (func_stmt)
-
-
-state 154
-
-    3 stmt_list: stmt_list . stmt
-   48 func_stmt: ALG atomic_type identifier '(' param_list ')' ENDL NACH stmt_list . KON ENDL
-
-    BOOL_CONST    shift, and go to state 1
-    INT_CONST     shift, and go to state 2
-    STRING_CONST  shift, and go to state 3
-    DOUBLE_CONST  shift, and go to state 4
-    CHAR_CONST    shift, and go to state 5
-    ID            shift, and go to state 6
-    ALG           shift, and go to state 7
-    VVOD          shift, and go to state 8
-    VESCH         shift, and go to state 9
-    VESCHTAB      shift, and go to state 10
-    VYVOD         shift, and go to state 11
-    DA            shift, and go to state 12
-    ZNACH         shift, and go to state 13
-    KON           shift, and go to state 156
-    LIT           shift, and go to state 14
-    LITTAB        shift, and go to state 15
-    LOG           shift, and go to state 16
-    LOGTAB        shift, and go to state 17
-    NET           shift, and go to state 18
-    NS            shift, and go to state 19
-    SIM           shift, and go to state 20
-    SIMTAB        shift, and go to state 21
-    CEL           shift, and go to state 22
-    CELTAB        shift, and go to state 23
-    ENDL          shift, and go to state 24
-    MINUS         shift, and go to state 25
-    '('           shift, and go to state 26
-
-    stmt           go to state 50
-    expr           go to state 30
-    function_call  go to state 31
-    expr_list      go to state 32
-    identifier     go to state 33
-    decl           go to state 34
-    func_stmt      go to state 35
-    proc_stmt      go to state 36
-    znach_value    go to state 37
-    array_type     go to state 38
-    atomic_type    go to state 39
-    print          go to state 40
-    read           go to state 41
-
-
-state 155
-
-   50 proc_stmt: ALG identifier '(' param_list ')' ENDL NACH ENDL stmt_list KON . ENDL
-
-    ENDL  shift, and go to state 157
-
-
-state 156
-
-   48 func_stmt: ALG atomic_type identifier '(' param_list ')' ENDL NACH stmt_list KON . ENDL
-
-    ENDL  shift, and go to state 158
-
-
-state 157
-
-   50 proc_stmt: ALG identifier '(' param_list ')' ENDL NACH ENDL stmt_list KON ENDL .
+   50 proc_stmt: ALG identifier '(' param_list ')' ENDL NACH ENDL stmt_list KON .
 
     $default  reduce using rule 50 (proc_stmt)
 
 
-state 158
+state 154
 
-   48 func_stmt: ALG atomic_type identifier '(' param_list ')' ENDL NACH stmt_list KON ENDL .
+   48 func_stmt: ALG atomic_type identifier '(' param_list ')' ENDL NACH stmt_list KON .
 
     $default  reduce using rule 48 (func_stmt)

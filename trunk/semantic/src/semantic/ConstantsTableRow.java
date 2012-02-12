@@ -11,27 +11,28 @@ import java.util.*;
 */
 public class ConstantsTableRow {
 
-    public static int m_constantIDCount = 1;
     /**
      * Статический счётчик для вычисления следующего ID
      */
-    private int m_constantID;
+    public static int m_constantIDCount = 1;
     /**
      * Идентификатор константы
      */
-    private ArrayList<Integer> m_locations;
+    private int m_constantID;
     /**
      * Местоположения в коде
      */
-    private String m_typeOfConstant;
+    private ArrayList<Integer> m_locations;
     /**
      * Тип константы
      */
-    private Object m_value;
-
+    private String m_typeOfConstant;
     /**
      * Значение константы
      */
+    private Object m_value;
+
+
     /*
      * Конструктор, создающий строку таблицы констант с положениями в коде locs,
      * типом type и значением константы value
@@ -43,6 +44,10 @@ public class ConstantsTableRow {
         m_constantID = m_constantIDCount;
         m_constantIDCount++;
     }
+    /*
+     * Конструктор, создающий строку таблицы констант с положением loc, типом
+     * type и значением константы value
+     */
 
     public ConstantsTableRow(int loc, String type, Object value) {
         m_locations = new ArrayList();
@@ -60,10 +65,16 @@ public class ConstantsTableRow {
         return m_locations;
     }
 
+    /*
+     * Устанавливает ID константы
+     */
     public void setID(int id) {
         m_constantID = id;
     }
 
+    /*
+     * Возвращает номер строки первого вхождения константы
+     */
     public Integer getLowestLocation() {
         Integer result = null;
         int lowest = m_locations.get(0);
@@ -77,19 +88,17 @@ public class ConstantsTableRow {
 
         return result;
     }
+
     /*
      * Возвращает тип константы в виде строки
      */
-
     public String getType() {
         return m_typeOfConstant;
     }
-   
-    
+
     /*
      * Возвращает значение константы (может быть преобразовано в любой тип)
      */
-    
     public Object getValue() {
         return m_value;
     }
@@ -97,36 +106,36 @@ public class ConstantsTableRow {
     public String getStringValue() {
         return m_value.toString();
     }
+
     /*
      * Возвращает ID константы в таблице констант
      */
-
     public int getID() {
         return m_constantID;
     }
     /*
-     * Установить положения константы в коде
+     * Устанавливает положения константы в коде
      */
 
     public void setLocations(ArrayList<Integer> in_locs) {
         m_locations = in_locs;
     }
-    /*
-     * Добавить положение константы в коде
-     */
 
+    /*
+     * Добавляет положение константы в коде
+     */
     public void addLocation(Integer in_loc) {
         m_locations.add(in_loc);
     }
     /*
-     * Установить тип константы (например, "UTF-8")
+     * Устанавливает тип константы (например, "UTF-8")
      */
 
     public void setType(String in_type) {
         m_typeOfConstant = in_type;
     }
     /*
-     * Установить значение константы
+     * Установливает значение константы
      */
 
     public void setValue(Object in_value) {

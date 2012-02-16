@@ -778,9 +778,16 @@ public class Generator {
                         String _parName = vx.getParentList().get(vx.enterNum).getAttribute("NAME");
                         if (_parName.equals("create_int_int_dim") != true && _parName.equals("append_int_int_dim") != true) {
 
-                            pushIntOnStack(vxName);
-                            m_typeStack.add("INT");
-
+                            if (_parName.equals("UnaryMinus")) {
+                                int newInt = Integer.valueOf(vxName).intValue();
+                                newInt = -newInt;
+                                String newStr = String.valueOf(newInt);
+                                pushIntOnStack(newStr);
+                                m_typeStack.add("INT");
+                            } else {
+                                pushIntOnStack(vxName);
+                                m_typeStack.add("INT");
+                            }
 
                         } else {
                             int val = Integer.valueOf(vxName).intValue();
@@ -854,6 +861,21 @@ public class Generator {
 
             }
             break;
+            case "UnaryMinus": {
+                m_typeStack.pop();
+                /*  if (vx.getParentList().get(0).getAttribute("NAME").equals("create_array_expr")) {
+                m_commands.put(CG.INEG);
+                }*/
+                // m_commands.put(CG.INEG);
+                /*  String _str = m_idStack.pop().toString();
+                if (Semantic.isNumeric(_str)) {
+                int newInt = Integer.valueOf(_str).intValue();
+                newInt = -newInt;
+                m_idStack.push(String.valueOf(newInt));
+                m_typeStack.pop();
+                }*/
+            }
+            break;
             case "create_znachvalue": {
                 curZnachType = m_typeStack.pop().toString();
 
@@ -919,6 +941,7 @@ public class Generator {
                 } else if (nameOf1Par.equals("create_array_expr")) {
                     m_commands.put(CG.ICONST_1);
                     m_commands.put(CG.ISUB);
+
                 } else if (nameOf1Par.equals("create_expr_list_print") && m_typeStack.empty() != true) {
                     specialForPrintExprList();
                 } else if (nameOf1Par.equals("create_function_call")) {
@@ -930,6 +953,7 @@ public class Generator {
             break;
             case "append_expr_to_list": {
                 String nameOf2Par = vx.getParentList().get(0).getParentList().get(0).getAttribute("NAME");
+
                 if (nameOf2Par.equals("create_expr_list_print") && m_typeStack.empty() != true) {
                     specialForPrintExprList();
                     if (m_typeStack.empty() != true) {
@@ -952,6 +976,9 @@ public class Generator {
                 m_commands.put(CG.IALOAD);
                 String nameOf2Par = vx.getParentList().get(0).getParentList().get(0).getAttribute("NAME");
                 String nameOf3Par = vx.generateNLevelParent(2).getAttribute("NAME");
+                if (vx.getParentList().get(0).getAttribute("NAME").equals("UnaryMinus")) {
+                    m_commands.put(CG.INEG);
+                }
                 if (nameOf2Par.equals("create_expr_list_print") || nameOf3Par.equals("create_expr_list_print")) {
                     specialForPrintExprList();
                     if (m_typeStack.isEmpty() != true) {
@@ -1048,6 +1075,8 @@ public class Generator {
                     String _name = m_idStack.pop().toString();
                     int id = Integer.valueOf(Semantic.localsTable.getRowByFunIDAndName(funID, _name).getID()).intValue();
                     loadAFromLocalVar((byte) id);
+                    /*  m_commands.put(CG.ICONST_1);
+                    m_commands.put(CG.ISUB);*/
                     m_typeStack.pop();
                     vx.enterNum++;
                 } else if (_par.equals("create_expr_id") && vx.getParentList().get(vx.enterNum).getParentList().get(0).getAttribute("NAME").equals(":=") != true) {
@@ -1281,7 +1310,7 @@ public class Generator {
             }
             break;
             case "**": {
-                
+
                 if (m_typeStack.get(m_typeStack.size() - 2).toString().equals("INT")
                         && m_typeStack.get(m_typeStack.size() - 1).toString().equals("INT")) {
                     m_commands.put(CG.INVOKESTATIC);
@@ -1301,23 +1330,28 @@ public class Generator {
             case "[]:=": {
                 byte i = 1;
 
+
                 String type = m_typeStack.pop().toString();
-                switch (type) {
-                    case "INT":
-                        m_commands.put(CG.IASTORE);
-                        break;
-                    case "CHAR":
-                        m_commands.put(CG.CASTORE);
-                        break;
-                    case "String":
-                        m_commands.put(CG.AASTORE);
-                        break;
-                    case "BOOLEAN":
-                        m_commands.put(CG.BASTORE);
-                        break;
-                    case "DOUBLE":
-                        m_commands.put(CG.DASTORE);
-                        break;
+                if (type.equals("целтаб")) {
+                    m_commands.put(CG.IASTORE);
+                } else {
+                    switch (type) {
+                        case "INT":
+                            m_commands.put(CG.IASTORE);
+                            break;
+                        case "CHAR":
+                            m_commands.put(CG.CASTORE);
+                            break;
+                        case "String":
+                            m_commands.put(CG.AASTORE);
+                            break;
+                        case "BOOLEAN":
+                            m_commands.put(CG.BASTORE);
+                            break;
+                        case "DOUBLE":
+                            m_commands.put(CG.DASTORE);
+                            break;
+                    }
                 }
                 m_typeStack.clear();
 

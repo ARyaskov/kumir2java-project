@@ -58,8 +58,10 @@ public class CG {
     public static final byte INVOKESPECIAL = (byte) 0xB7;
     public static final byte INVOKESTATIC = (byte) 0xB8;
     // Действия с константами
+    public static final byte ICONST_m1 = (byte) 0x02;
     public static final byte ICONST_0 = (byte) 0x03;
     public static final byte ICONST_1 = (byte) 0x04;
+     public static final byte ICONST_2 = (byte) 0x05;
     public static final byte BIPUSH = (byte) 0x10;
     public static final byte SIPUSH = (byte) 0x11;
     public static final byte LDC = (byte) 0x12;

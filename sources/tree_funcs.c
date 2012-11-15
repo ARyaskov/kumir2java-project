@@ -174,6 +174,18 @@ char * getName(int type)
     case EQ:
         strcpy(result, "=");
         break;
+    case enum_I:
+        strcpy(result, "&&");
+        break;
+    case enum_ILI:
+        strcpy(result, "||");
+        break;
+    case enum_NE:
+        strcpy(result, "!");
+        break;
+    case UNARY:
+        strcpy(result, "uminus");
+        break;
     default:
         strcpy(result, "Non_operation");
     }
@@ -1536,7 +1548,254 @@ struct NRead_stmt* create_expr_list_read(struct NExpr_list* list)
     return read_stmt;
 }
 
+/////////////////////////////////////////////
+// !!!!!!!!!!!!!ЦИКЛЫ РАЗВИЛКИ !!!!!!!!!!!///
+/////////////////////////////////////////////
 
+/*
+ if - else
+*/
+struct NIf_stmt* create_if(struct NExpr* expr, struct NStmt_list* list_to, struct NStmt_list* list_inache)
+{
+    struct NIf_stmt* if_stmt = NULL;
+
+    char* uniqID;
+    if_stmt = (struct NIf_stmt*) safeAlloc( sizeof(struct NIf_stmt) );
+
+	if_stmt->expr = expr;
+	if_stmt->list_to = list_to;
+    if_stmt->list_inache = list_inache;
+
+#ifdef OUT2DOT
+    uniqID = makeUniqueID("create_if");
+    if_stmt->print_val = uniqID;
+    makeNode(uniqID, expr->print_val);
+	makeNode(uniqID, list_to->print_val);
+	makeNode(uniqID, list_inache->print_val);
+#endif
+    return if_stmt;
+}
+
+struct NStmt* create_stmt_if (struct NIf_stmt* if_stmt)
+{
+    struct NStmt* stmt = NULL;
+    char* uniqID;
+
+    if (if_stmt)
+    {
+        stmt = (struct NStmt*)safeAlloc(sizeof(struct NStmt));
+        stmt->if_stmt   = if_stmt;
+        stmt->type   = IF_STMT;
+
+#ifdef OUT2DOT
+        uniqID = makeUniqueID("create_stmt_if");
+        stmt->print_val = uniqID;
+        makeNode(uniqID, if_stmt->print_val);
+#endif
+
+    }
+
+    return stmt;
+}
+/*
+ Начало - конец
+*/
+struct NNc_expr* create_nc(struct NExpr* expr, enum NC_type type)
+{
+    struct NNc_expr* nc_expr = NULL;
+
+    char* uniqID;
+    nc_expr = (struct NNc_expr*) safeAlloc( sizeof(struct NNc_expr) );
+
+    nc_expr->expr = expr;
+    nc_expr->type   = type;
+
+#ifdef OUT2DOT
+    uniqID = makeUniqueID("create_nc");
+    nc_expr->print_val = uniqID;
+    makeNode(uniqID, expr->print_val);
+
+#endif
+    return nc_expr;
+}
+
+/*
+ организация циклов
+*/
+struct NCycle_stmt* create_cycle   (struct NNc_expr* nc_expr, struct NStmt_list* list, struct NExpr* expr)
+{
+    struct NCycle_stmt* cycle_stmt = NULL;
+
+    char* uniqID;
+    cycle_stmt = (struct NCycle_stmt*) safeAlloc( sizeof(struct NCycle_stmt) );
+
+	cycle_stmt->nc_expr = nc_expr;
+    cycle_stmt->list = list;
+	cycle_stmt->expr = expr;
+
+#ifdef OUT2DOT
+    uniqID = makeUniqueID("create_cycle");
+    cycle_stmt->print_val = uniqID;
+    makeNode(uniqID, nc_expr->print_val);
+	makeNode(uniqID, list->print_val);
+	if(expr!= NULL)
+        makeNode(uniqID, expr->print_val);
+
+#endif
+    return cycle_stmt;
+}
+
+struct NStmt* create_stmt_cycle (struct NCycle_stmt* cycle_stmt)
+{
+    struct NStmt* stmt = NULL;
+    char* uniqID;
+
+    if (cycle_stmt)
+    {
+        stmt = (struct NStmt*)safeAlloc(sizeof(struct NStmt));
+        stmt->cycle_stmt   = cycle_stmt;
+        stmt->type   = CYCLE_STMT;
+
+#ifdef OUT2DOT
+        uniqID = makeUniqueID("create_stmt_cycle");
+        stmt->print_val = uniqID;
+        makeNode(uniqID, cycle_stmt->print_val);
+#endif
+
+    }
+
+    return stmt;
+}
+
+/*
+ ВЫБОР свитч кэйс
+*/
+struct NSwitch_stmt* create_switch(struct NCase_stmt_list* case_stmt_list, struct NStmt_list* list)
+{
+    struct NSwitch_stmt* switch_stmt = NULL;
+
+    char* uniqID;
+    switch_stmt = (struct NSwitch_stmt*) safeAlloc( sizeof(struct NSwitch_stmt) );
+
+	switch_stmt->case_stmt_list = case_stmt_list;
+    switch_stmt->list = list;
+
+#ifdef OUT2DOT
+    uniqID = makeUniqueID("create_if");
+    switch_stmt->print_val = uniqID;
+	makeNode(uniqID, switch_stmt->print_val);
+	if(list!=NULL)
+        makeNode(uniqID, list->print_val);
+
+#endif
+    return switch_stmt;
+}
+
+struct NStmt* create_stmt_switch (struct NSwitch_stmt* switch_stmt)
+{
+    struct NStmt* stmt = NULL;
+    char* uniqID;
+
+    if (switch_stmt)
+    {
+        stmt = (struct NStmt*)safeAlloc(sizeof(struct NStmt));
+        stmt->switch_stmt   = switch_stmt;
+        stmt->type   = SWITCH_STMT;
+
+#ifdef OUT2DOT
+        uniqID = makeUniqueID("create_stmt_switch");
+        stmt->print_val = uniqID;
+        makeNode(uniqID, switch_stmt->print_val);
+#endif
+
+    }
+
+    return stmt;
+}
+
+/*
+Лист Кейс
+*/
+struct NCase_stmt_list* create_case_stmt_list(struct NCase_stmt* case_stmt)
+{
+    struct NCase_stmt_list* case_stmt_list = NULL;
+
+    char* uniqID;
+    case_stmt_list = (struct NCase_stmt_list*) safeAlloc( sizeof(struct NCase_stmt_list) );
+
+	case_stmt_list->first = case_stmt;
+	case_stmt_list->last = case_stmt;
+
+#ifdef OUT2DOT
+    uniqID = makeUniqueID("create_if");
+    case_stmt->print_val = uniqID;
+    makeNode(uniqID, case_stmt->print_val);
+
+#endif
+    return case_stmt_list;
+}
+/*
+Лист Кейс вставка
+*/
+struct NCase_stmt_list* append_case_stmt_to_list(struct NCase_stmt_list* case_stmt_list ,struct NCase_stmt* stmt_case)
+{
+    char* uniqID;
+	case_stmt_list->last->next = stmt_case;
+	case_stmt_list->last = stmt_case;
+
+#ifdef OUT2DOT
+    uniqID = makeUniqueID("append_case_stmt_to_list");
+    case_stmt_list->print_val = uniqID;
+    makeNode(uniqID, stmt_case->print_val);
+
+#endif
+    return case_stmt_list;
+}
+/*
+Кейс
+*/
+struct NCase_stmt* create_case_stmt(struct NExpr* expr, struct NStmt_list* list)
+{
+    struct NCase_stmt* case_stmt = NULL;
+
+    char* uniqID;
+    case_stmt = (struct NCase_stmt*) safeAlloc( sizeof(struct NCase_stmt) );
+
+	case_stmt->expr = expr;
+    case_stmt->list = list;
+
+#ifdef OUT2DOT
+    uniqID = makeUniqueID("create_if");
+    case_stmt->print_val = uniqID;
+    makeNode(uniqID, case_stmt->print_val);
+
+#endif
+    return case_stmt;
+}
+/*
+ Утверждение
+*/
+struct NStmt* create_stmt_utv(struct NExpr* expr)
+{
+    struct NStmt* stmt = NULL;
+    char* uniqID;
+
+    if (expr)
+    {
+        stmt = (struct NStmt*)safeAlloc(sizeof(struct NStmt));
+        stmt->expr   = expr;
+        stmt->type   = enum_UTV;
+
+#ifdef OUT2DOT
+        uniqID = makeUniqueID("create_stmt_utv");
+        stmt->print_val = uniqID;
+        makeNode(uniqID, stmt->print_val);
+#endif
+
+    }
+
+    return stmt;
+}
 
 /*
 Атомарный тип <- текстовое представление
@@ -1594,6 +1853,7 @@ struct NEnum_atomic_identifier_list* create_enum_atomic_identifier_list(struct N
     struct NEnum_atomic_identifier_list* list = (struct NEnum_atomic_identifier_list*)safeAlloc(sizeof(struct NEnum_atomic_identifier_list));
     char* uniqID;
 
+    safeAlloc(sizeof(struct NEnum_atomic_identifier));
     struct NEnum_atomic_identifier* firstId = (struct NEnum_atomic_identifier*)safeAlloc(sizeof(struct NEnum_atomic_identifier));
 
 

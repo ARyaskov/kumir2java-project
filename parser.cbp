@@ -59,11 +59,7 @@
 			<Option weight="100" />
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="other\parser.y">
-			<Option weight="100" />
-			<Option compiler="gcc" use="0" buildCommand=" " />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="other\parserMV.y" />
 		<Unit filename="sources\lex.yy.c">
 			<Option compilerVar="CC" />
 		</Unit>

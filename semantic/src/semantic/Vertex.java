@@ -43,7 +43,19 @@ public class Vertex {
      * Есть ли тип вообще
      */
     private boolean m_hasType;
-
+    /*
+     * Cчетчик посещений генератора кода данной вершины
+     */
+    private int visitsCount = 0;
+    
+    public int getVisitsCount()
+    {
+        return visitsCount;
+    }
+    public void incVisitsCount()
+    {
+        visitsCount++;
+    }
  
     
     public void inheriteType() {

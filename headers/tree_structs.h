@@ -63,7 +63,10 @@ enum Const_type
     Char,
     String,
     Id,
-    Bool
+    Bool,
+    enum_I,
+    enum_ILI,
+    enum_NE
 };
 
 /* Тип оператора */
@@ -77,7 +80,11 @@ enum Stmt_type
     PRINT_STMT,
     READ_STMT,
     ZNACH_VALUE,
-    DECL
+    DECL,
+    SWITCH_STMT,
+    enum_UTV,
+    IF_STMT,
+	CYCLE_STMT
 };
 
 /* Дополнительный тип выражения */
@@ -98,7 +105,12 @@ enum EDimensionType
     /* Второй индекс - переменная (массив[1:N])*/
     INT_ID
 };
-
+/* выбор цикла*/
+enum NC_type
+{
+  enum_RAZ,
+  enum_POKA
+};
 
 /* Символ program - программа (корень) */
 struct NProgram
@@ -144,6 +156,13 @@ struct NStmt
     struct NDecl* decl;
     // Указатель на следующий оператор в списке
     struct NStmt*  next;
+
+    // Указатель на оператор ЕСЛИ
+    struct NIf_stmt*	  if_stmt;
+    // Указатель на  оператор НЦ
+	struct NCycle_stmt* cycle_stmt;
+	// Указатель на  оператор ВЫБОР
+	struct NSwitch_stmt* switch_stmt;
 
 #ifdef OUT2DOT
     char* print_val;
@@ -202,6 +221,7 @@ struct NExpr
     struct NFunction_call* func_call;
     /* Указатель на идентификатор (если хранится идентификатор)*/
     struct NIdentifier*  id;
+
 #ifdef OUT2DOT
     char* print_val;
 #endif
@@ -389,6 +409,70 @@ struct NPrint_stmt
 {
     /* Выражение, результат которого следует вывести */
     struct NExpr_list* list;
+#ifdef OUT2DOT
+    char* print_val;
+#endif
+};
+
+//!!!
+struct NNc_expr
+{
+     struct NExpr* expr;
+     enum NC_type type;
+#ifdef OUT2DOT
+    char* print_val;
+#endif
+};
+
+//!!!
+struct NIf_stmt
+{
+    struct NExpr* expr;
+    struct NStmt_list* list_to;
+    struct NStmt_list* list_inache;
+#ifdef OUT2DOT
+    char* print_val;
+#endif
+};
+
+//!!!
+struct NCycle_stmt
+{
+	struct NNc_expr* nc_expr;
+	struct NStmt_list* list;
+	struct NExpr* expr;
+#ifdef OUT2DOT
+    char* print_val;
+#endif
+};
+
+
+//!!!
+struct NCase_stmt
+{
+    struct NExpr* expr;
+    struct NStmt_list* list;
+    struct NCase_stmt* next;
+#ifdef OUT2DOT
+    char* print_val;
+#endif
+};
+
+//!!!
+struct NCase_stmt_list
+{
+    struct NCase_stmt* first;
+    struct NCase_stmt* last;
+#ifdef OUT2DOT
+    char* print_val;
+#endif
+};
+
+//!!!
+struct NSwitch_stmt
+{
+	struct NCase_stmt_list* case_stmt_list;
+	struct NStmt_list* list;
 #ifdef OUT2DOT
     char* print_val;
 #endif

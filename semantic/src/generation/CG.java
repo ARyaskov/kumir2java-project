@@ -61,7 +61,7 @@ public class CG {
     public static final byte ICONST_m1 = (byte) 0x02;
     public static final byte ICONST_0 = (byte) 0x03;
     public static final byte ICONST_1 = (byte) 0x04;
-     public static final byte ICONST_2 = (byte) 0x05;
+    public static final byte ICONST_2 = (byte) 0x05;
     public static final byte BIPUSH = (byte) 0x10;
     public static final byte SIPUSH = (byte) 0x11;
     public static final byte LDC = (byte) 0x12;
@@ -93,7 +93,16 @@ public class CG {
     public static final byte DUP = (byte) 0x59;
     public static final byte INEG = (byte) 0x74;
     public static final byte DNEG = (byte) 0x77;
-
+    // ветвления
+    public static final byte IFEQ = (byte) 0x99;
+    public static final byte IFNE = (byte) 0x9a;	
+    public static final byte IFLT = (byte) 0x9b;
+    public static final byte IFGE = (byte) 0x9c;
+    public static final byte IFGT = (byte) 0x9d;
+    public static final byte IFLE = (byte) 0x9e;
+    public static final byte IFNONNULL = (byte) 0xc7;
+    public static final byte IFNULL = (byte) 0xc6;
+    
     public static void putShortIntoByteArray(short two_bytes, ArrayList<Byte> bytes) {
         ByteBuffer buffer = ByteBuffer.allocate(2);
         buffer.putShort(two_bytes);

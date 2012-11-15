@@ -748,13 +748,52 @@ public class Generator {
 
         return result;
     }
-
+    /*
+     * принимает вешину и проверяет является она развилкой, циклом или ветвлением
+     */
+    public boolean isComplexStmt(Vertex vx)
+    {
+        if(vx.getVirginName().indexOf("create_if") > -1 || vx.getVirginName().indexOf("create_switch") > -1
+                || vx.getVirginName().indexOf("create_cycle") > -1)
+        {
+            return  false; 
+        }
+        else
+            return true;
+    }
+    public boolean hasComplexStmtParent (Vertex vx)
+    {
+        if(vx.getParentList().size() > 0)
+        {
+           if(vx.getVisitsCount() < vx.getParentList().size())
+            {
+                if(isComplexStmt(vx.getParentList().get(vx.getVisitsCount())) 
+                        || hasComplexStmtParent(vx.getParentList().get(vx.getVisitsCount())))
+                {
+                    return true;
+                } 
+            }
+        }
+      
+        return false;
+    }
+    /*
+     * обход всех родителей узла
+     * Если после первой проверки родителя не были найдены развилки
+     * то этот родитель является истинным для узла
+     * иначе - пропустить родителя
+     */
     public void generateArray() {
     }
 
     public void giantSwitch(Vertex vx) {
-
-
+        
+        
+        boolean watch = hasComplexStmtParent(vx);
+        vx.incVisitsCount();
+        if(watch)
+            return;
+        System.out.println(vx.getVirginName());
         boolean isPrepareForAssmnt = false;
 
 
@@ -762,8 +801,8 @@ public class Generator {
         String vxType = vx.getAttribute("TYPE");
         String vxTypeOfSymbol = vx.getTypeOfSymbol();
 
-        System.out.printf("%s - %s\n", vxName, m_typeStack.toString());
-        System.out.printf("IDSTACK: %s\n", m_idStack.toString());
+        //System.out.printf("%s - %s\n", vxName, m_typeStack.toString());
+        //System.out.printf("IDSTACK: %s\n", m_idStack.toString());
         switch (vxName) {
             default: {
                 if (vxName.equals("процедура")) {
@@ -857,23 +896,23 @@ public class Generator {
 
                     vx.enterNum++;
                 }
-
+                
 
             }
             break;
             case "UnaryMinus": {
                 m_typeStack.pop();
-                /*  if (vx.getParentList().get(0).getAttribute("NAME").equals("create_array_expr")) {
+                if (vx.getParentList().get(0).getAttribute("NAME").equals("create_array_expr")) {
                 m_commands.put(CG.INEG);
-                }*/
-                // m_commands.put(CG.INEG);
-                /*  String _str = m_idStack.pop().toString();
+                }
+                 m_commands.put(CG.INEG);
+                 String _str = m_idStack.pop().toString();
                 if (Semantic.isNumeric(_str)) {
                 int newInt = Integer.valueOf(_str).intValue();
                 newInt = -newInt;
                 m_idStack.push(String.valueOf(newInt));
                 m_typeStack.pop();
-                }*/
+                }
             }
             break;
             case "create_znachvalue": {
@@ -906,6 +945,14 @@ public class Generator {
             }
             break;
             case "append_stmt_to_list": {
+                for(int  i = 0; vx.getChildList().indexOf(i) <= vx.getChildList().size(); i++)
+                {
+                    if( isComplexStmt(vx) == true)
+                    {
+                       break;
+                    }
+                }
+                
             }
             break;
             case "create_from_atomic_decl": {
@@ -1117,11 +1164,7 @@ public class Generator {
 
                     vx.enterNum++;
                 }
-                /////
-
-
-//////
-
+           
             }
             break;
             case "create_enum_array_identifier_list": {
@@ -1386,8 +1429,14 @@ public class Generator {
 
             }
             break;
+            case "create_if": {
+               m_commands.put(CG.RETURN);
+               Semantic.bytecodeBuffer.put(curMethod, m_commands);
 
-
+               curMethod = "";
+               m_commands = ByteBuffer.allocate(2048); 
+            }
+            break;
         }
     }
 

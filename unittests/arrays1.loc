@@ -11,8 +11,8 @@ create_from_array_decl!64
 create_from_array_decl!64
 create_stmt_decl!74
 create_stmt_list!84
-create_proc!95
-create_proc!95
-create_stmt_proc!a5
-create_stmt_list!b5
+create_proc!94
+create_proc!94
+create_stmt_proc!a4
+create_stmt_list!b4
 create_program!c5

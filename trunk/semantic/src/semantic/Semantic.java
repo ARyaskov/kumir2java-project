@@ -21,6 +21,10 @@ public class Semantic {
     public static int vertexId = 0;
     public static Vertex root;
     public static ArrayList<Vertex> procs;
+    
+    /**
+     * Функции
+     */
     public static ArrayList<Vertex> funcs;
     public static HashMap<String, Integer> locations;
     public static HashMap<String, ArrayList<Integer>> multipleLocations;
@@ -40,16 +44,26 @@ public class Semantic {
     public static int m_order = 0;
     public static int m_mainNameAndType;
     public static short m_mainClassID;
+    
+    /*
+     * Развилки и циклы
+     */
+
     /*
      * public static boolean m_isPrevIsType = false; public static String
      * m_prevType = "";
      */
 
+    /**
+     * Чтение .dot файла
+     * @param path путь к .dot файлу
+     */
     public static void readFile(String path) {
         fileContent = "";
         Scanner in = null;
         try {
-            in = new Scanner(new File(path));
+            File file = new File(path);
+            in = new Scanner(file, "windows-1251");
         } catch (FileNotFoundException ex) {
             Logger.getLogger(Semantic.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -81,21 +95,18 @@ public class Semantic {
             str1 = str1.trim();
             str2 = str2.trim();
             boolean isNum = Semantic.isNumeric(str2);
-            if (isNum) {
-                if (str1.length() > 0) {
+            if (isNum && str1.length() > 0) {
+                locations.put(str1, Integer.valueOf(str2));
 
-                    locations.put(str1, Integer.valueOf(str2));
-
-                    if (multipleLocations.containsKey(str1)) {
-                        ArrayList<Integer> int0 = multipleLocations.get(str1);
-                        int0.add(Integer.valueOf(str2));
-                        multipleLocations.put(str1, int0);
-                    } else {
-                        ArrayList<Integer> int0 = new ArrayList();
-                        int0.add(Integer.valueOf(str2));
-                        multipleLocations.put(str1, int0);
-                    }
-                }
+                if (multipleLocations.containsKey(str1)) {
+                    ArrayList<Integer> int0 = multipleLocations.get(str1);
+                    int0.add(Integer.valueOf(str2));
+                    multipleLocations.put(str1, int0);
+                } else {
+                    ArrayList<Integer> int0 = new ArrayList();
+                    int0.add(Integer.valueOf(str2));
+                    multipleLocations.put(str1, int0);
+                }                
             }
         }
     }
@@ -114,7 +125,61 @@ public class Semantic {
         }
 
     }
+      /*
+     * Развилки и циклы. ЕСЛИ ТО
+     */
+    public static void If (Vertex in_vx, ArrayList<Vertex> list)
+    {
+       Iterator it = in_vx.getChildList().iterator();
+        Vertex vx = null;
 
+        while (it.hasNext()) 
+        {
+            vx = (Vertex) it.next();
+            if (vx.getAttribute("NAME").equals("create_if")) 
+            {
+                list.add(vx);
+            }
+            If(vx, list); 
+        }
+    }
+    
+      /*
+     * Развилки и циклы. ВЫБОР
+     */   
+     public static void Switch (Vertex in_vx, ArrayList<Vertex> list)
+    {
+       Iterator it = in_vx.getChildList().iterator();
+        Vertex vx = null;
+
+        while (it.hasNext()) 
+        {
+            vx = (Vertex) it.next();
+            if (vx.getAttribute("NAME").equals("create_switch")) 
+            {
+                list.add(vx);
+            }
+            Switch(vx, list); 
+        } 
+    }
+      /*
+     * Развилки и циклы. ПОКА
+     */   
+     public static void ForWhile (Vertex in_vx, ArrayList<Vertex> list)
+    {
+       Iterator it = in_vx.getChildList().iterator();
+        Vertex vx = null;
+
+        while (it.hasNext()) 
+        {
+            vx = (Vertex) it.next();
+            if (vx.getAttribute("NAME").equals("create_cycle")) 
+            {
+                list.add(vx);
+            }
+            ForWhile(vx, list); 
+        } 
+    }
     public static boolean inChildsExistsAttName(Vertex in_vx, String att_name) {
         Iterator it = in_vx.getChildList().iterator();
 
@@ -213,7 +278,7 @@ public class Semantic {
         boolean hasType = false;
         boolean isInheritesType = false;
 
-        if (str_in.contains("!")) {// Если встретила не константа
+        if (str_in.contains("!")) {// Если встретилась не константа
             index = str_in.indexOf("!");
             name = str_in.substring(0, index);
             id = str_in.substring(index + 1, str_in.length());
@@ -348,8 +413,7 @@ public class Semantic {
         String[] rows = fileContent.split(";");
 
 
-        for (int i = 0; i
-                < rows.length; i++) {
+        for (int i = 0; i < rows.length; i++) {
             Vertex v1;
             Vertex v2;
 

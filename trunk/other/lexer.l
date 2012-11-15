@@ -57,6 +57,20 @@ FILE * err;
 						}
 
 
+"если"                  {fprintf(logfile,"\nВстретилось ключевое слово \"если\"!");return ESLI;}
+"то"                    {fprintf(logfile,"\nВстретилось ключевое слово \"то\"!");return TO;}
+"нц"                    {fprintf(logfile,"\nВстретилось ключевое слово \"нц\"!");return NC;}
+"кц"                    {fprintf(logfile,"\nВстретилось ключевое слово \"кц\"!");return KC;}
+"кц_при"                {fprintf(logfile,"\nВстретилось ключевое слово \"кц_при\"!");return KC_PRI;}
+"кц при"                {fprintf(logfile,"\nВстретилось ключевое слово \"кц при\"!");return KC_PRI;}
+"выбор"                 {fprintf(logfile,"\nВстретилось ключевое слово \"выбор\"!");return VYBOR;}
+"утв"                   {fprintf(logfile,"\nВстретилось ключевое слово \"утв\"!");return UTV;}
+"иначе"                 {fprintf(logfile,"\nВстретилось ключевое слово \"иначе\"!");return INACHE;}
+"все"                   {fprintf(logfile,"\nВстретилось ключевое слово \"все\"!");return VSE;}
+"раз"                   {fprintf(logfile,"\nВстретилось ключевое слово \"раз\"!");return RAZ;}
+"пока"                   {fprintf(logfile,"\nВстретилось ключевое слово \"пока\"!");return POKA;}
+"при"                   {fprintf(logfile,"\nВстретилось ключевое слово \"при\"!");return PRI;}
+
 "алг"					{fprintf(logfile,"\nВстретилось ключевое слово \"алг\"!");return ALG;}
 "арг"					{fprintf(logfile,"\nВстретилось ключевое слово \"арг\"!");return ARG;}
 "ввод"					{fprintf(logfile,"\nВстретилось ключевое слово \"дано\"!");return VVOD;}
@@ -125,6 +139,9 @@ FILE * err;
                                            return DOUBLE_CONST;
 				                   }
 
+КЦ(_|[[:SPACE:]]+)ПРИ	{ fprintf(logfile,"\nВстретился cпециальный оператор завершения цикла!");
+                                           return KC_PRI;
+						}
 
 [А-Яа-яA-Za-z_ё@]+[0-9А-Яа-яA-Za-z_ё@]*  {
 if (!strcmp(yytext, "да") || !strcmp(yytext, "нет"))
@@ -197,7 +214,7 @@ if ( strlen(literal) != 1 )
   return res;
         }
 
-
+. {}
 
 %%
 

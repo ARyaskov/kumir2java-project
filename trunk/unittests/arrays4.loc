@@ -70,8 +70,8 @@ create_from_array_decl!279
 create_stmt_decl!289
 create_stmt_list!b9
 append_stmt_to_list!299
-create_proc!2a10
-create_proc!2a10
-create_stmt_proc!2b10
-create_stmt_list!2c10
+create_proc!2a9
+create_proc!2a9
+create_stmt_proc!2b9
+create_stmt_list!2c9
 create_program!2d10

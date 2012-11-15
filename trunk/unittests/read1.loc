@@ -16,8 +16,8 @@ create_expr_list_read!b5
 create_stmt_read!c5
 create_stmt_list!75
 append_stmt_to_list!d5
-create_proc!e6
-create_proc!e6
-create_stmt_proc!f6
-create_stmt_list!106
+create_proc!e5
+create_proc!e5
+create_stmt_proc!f5
+create_stmt_list!105
 create_program!116

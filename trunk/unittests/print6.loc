@@ -8,8 +8,8 @@ append_expr_to_list!34
 create_expr_list_print!44
 create_stmt_print!54
 create_stmt_list!64
-create_proc!75
-create_proc!75
-create_stmt_proc!85
-create_stmt_list!95
+create_proc!74
+create_proc!74
+create_stmt_proc!84
+create_stmt_list!94
 create_program!a5

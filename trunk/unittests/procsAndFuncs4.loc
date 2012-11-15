@@ -47,9 +47,9 @@ create_function_call_expr!1a3
 create_expr_list!1b4
 create_stmt_expr_list!1c4
 create_stmt_list!1d4
-create_proc!1e5
-create_proc!1e5
-create_proc!1e5
-create_stmt_proc!1f5
-create_stmt_list!205
+create_proc!1e4
+create_proc!1e4
+create_proc!1e4
+create_stmt_proc!1f4
+create_stmt_list!204
 create_program!215
